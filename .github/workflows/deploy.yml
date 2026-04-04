@@ -76,7 +76,7 @@ jobs:
             # Make sure you have created /opt/nekopay/.env on the server with your DB URL
             docker run -d \
               --name nekopay-api \
-              -p 3000:3000 \
+              --network host \
               --env-file /opt/nekopay/.env \
               --restart unless-stopped \
               $IMAGE_URL
