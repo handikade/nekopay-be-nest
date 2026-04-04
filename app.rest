@@ -1,3 +1,22 @@
-GET http://localhost:3000/
+GET http://localhost:3000/health
 
 ###
+
+POST http://localhost:3000/auth/register
+Content-Type: application/json
+
+{
+    "email": "dika@nekopay.id",
+    "password": "dika1234",
+    "username": "Dika"
+}
+
+###
+
+POST http://localhost:3000/auth/login
+Content-Type: application/json
+
+{
+    "identifier": "dika@nekopay.id",
+    "password": "dika1234"
+}

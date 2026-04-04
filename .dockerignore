@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.github
+.husky
+test
+docker-compose.yml
+Dockerfile
+.env*
+!*.example
