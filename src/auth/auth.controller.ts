@@ -13,16 +13,52 @@ export class AuthController {
 
   @Post('register')
   @ApiOperation({ summary: 'Register a new user account' })
-  @ApiResponse({ status: 201, description: 'User successfully registered' })
-  @ApiResponse({ status: 400, description: 'Validation error or email already taken' })
+  @ApiResponse({
+    status: 201,
+    description: 'User successfully registered',
+    schema: {
+      example: {
+        message: 'User registered successfully',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    schema: {
+      example: {
+        statusCode: 500,
+        message: 'Internal server error',
+      },
+    },
+  })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
 
   @Post('login')
   @ApiOperation({ summary: 'Log in and receive tokens' })
-  @ApiResponse({ status: 201, description: 'Login successful, returns access token' })
-  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiResponse({
+    status: 201,
+    description: 'Login successful, returns access token',
+    schema: {
+      example: {
+        accessToken:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNWRmNTU0ZC00NDI1LTRjYzQtODMzMy01ZTA1N2NjYTkxMzUiLCJ1c2VybmFtZSI6IkRpa2EiLCJpYXQiOjE3NzUzNzIwMzUsImV4cCI6MTc3NTM3MjkzNX0.o0h16bkHsfgFKNOo-aJPxIgd5eJWYFIe9DA7ohPko8o',
+      },
+    },
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Invalid credentials',
+    schema: {
+      example: {
+        message: 'Invalid credentials',
+        error: 'Conflict',
+        statusCode: 409,
+      },
+    },
+  })
   async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
     const { accessToken, refreshToken } = await this.authService.login(dto);
     res.cookie('refreshToken', refreshToken, {
