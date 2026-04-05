@@ -1,7 +1,9 @@
 import { Controller, Get, InternalServerErrorException } from '@nestjs/common';
 import { AppService } from './app.service';
 import { PrismaService } from './prisma/prisma.service';
+import { ApiOperation, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('health')
 @Controller()
 export class AppController {
   constructor(
@@ -10,6 +12,7 @@ export class AppController {
   ) {}
 
   @Get('health')
+  @ApiOperation({ summary: 'Check application and database health status' })
   async healthCheck() {
     try {
       await this.prisma.$queryRaw`SELECT 1`;
