@@ -1,9 +1,9 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { JwtService } from '@nestjs/jwt';
 import { AuthRepository } from './auth.repository';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { RegisterDto, RegisterSchema } from './dto/register.dto';
+import { LoginDto, LoginSchema } from './dto/login.dto';
 
 @Injectable()
 export class AuthService {
@@ -13,6 +13,12 @@ export class AuthService {
   ) {}
 
   async register(dto: RegisterDto) {
+    const validated = RegisterSchema.safeParse(dto);
+    if (!validated.success) {
+      const firstIssue = validated.error.issues[0];
+      throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
+    }
+
     const existingUser = await this.authRepository.findByEmailOrUsername(dto.email);
     if (existingUser) {
       throw new ConflictException('Email or username already exists');
@@ -28,6 +34,12 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
+    const validated = LoginSchema.safeParse(dto);
+    if (!validated.success) {
+      const firstIssue = validated.error.issues[0];
+      throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
+    }
+
     const user = await this.authRepository.findByEmailOrUsername(dto.identifier);
     if (!user || !(await argon2.verify(user.password, dto.password))) {
       throw new ConflictException('Invalid credentials');

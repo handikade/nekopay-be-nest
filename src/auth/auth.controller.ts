@@ -32,6 +32,17 @@ export class AuthController {
       },
     },
   })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+    schema: {
+      example: {
+        message: 'username: Invalid input: expected string, received undefined',
+        error: 'Bad Request',
+        statusCode: 400,
+      },
+    },
+  })
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
@@ -56,6 +67,17 @@ export class AuthController {
         message: 'Invalid credentials',
         error: 'Conflict',
         statusCode: 409,
+      },
+    },
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request',
+    schema: {
+      example: {
+        message: 'identifier: Invalid input: expected string, received undefined',
+        error: 'Bad Request',
+        statusCode: 400,
       },
     },
   })
