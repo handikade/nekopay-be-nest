@@ -1,10 +1,25 @@
-import { Controller, Post, Body, Res } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Body,
+  Res,
+  Req,
+  UnauthorizedException,
+  Get,
+  UseGuards,
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from './jwt-auth.guard';
 
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
+
+interface AuthenticatedRequest extends Request {
+  user: { id: string; username: string; role: string };
+  cookies: Record<string, string>;
+}
 
 @ApiTags('auth')
 @Controller('auth')
@@ -89,5 +104,61 @@ export class AuthController {
       path: '/',
     });
     return { accessToken };
+  }
+
+  @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access token' })
+  @ApiResponse({
+    status: 201,
+    description: 'Refresh successful, returns new access token',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Invalid or missing refresh token',
+  })
+  async refresh(@Req() req: AuthenticatedRequest, @Res({ passthrough: true }) res: Response) {
+    const token = req.cookies['refreshToken'];
+    if (!token) {
+      throw new UnauthorizedException('Refresh token missing');
+    }
+
+    try {
+      const { accessToken, refreshToken } = await this.authService.refresh(token);
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        secure: true,
+        path: '/',
+      });
+      return { accessToken };
+    } catch {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+  }
+
+  @Post('logout')
+  @ApiOperation({ summary: 'Log out and clear tokens' })
+  @ApiResponse({
+    status: 201,
+    description: 'Logout successful',
+  })
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: true,
+      path: '/',
+    });
+    return this.authService.logout();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Get('profile')
+  @ApiOperation({ summary: 'Get current user profile' })
+  @ApiResponse({
+    status: 200,
+    description: 'Returns the user profile',
+  })
+  getProfile(@Req() req: AuthenticatedRequest) {
+    return req.user;
   }
 }

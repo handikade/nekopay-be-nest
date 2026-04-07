@@ -53,4 +53,24 @@ export class AuthService {
 
     return { accessToken, refreshToken };
   }
+
+  async refresh(token: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync<{ sub: string; username: string }>(token);
+      const newPayload = { sub: payload.sub, username: payload.username };
+
+      const accessToken = await this.jwtService.signAsync(newPayload);
+      const refreshToken = await this.jwtService.signAsync(newPayload, {
+        expiresIn: '7d',
+      });
+
+      return { accessToken, refreshToken };
+    } catch {
+      throw new ConflictException('Invalid refresh token');
+    }
+  }
+
+  logout() {
+    return { message: 'Logged out successfully' };
+  }
 }
