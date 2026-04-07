@@ -1,20 +1,48 @@
 GET http://localhost:3000/health
 
-###
-
+### Register a new user
 POST http://localhost:3000/auth/register
 Content-Type: application/json
 
 {
     "email": "",
+    "username": "",
     "password": ""
 }
 
-###
-
+### Login and get Access Token
+# @name login
 POST http://localhost:3000/auth/login
 Content-Type: application/json
 
 {
+    "identifier": "",
     "password": ""
 }
+
+### Capture both Access Token and the raw Set-Cookie header
+@accessToken = {{login.response.body.accessToken}}
+@cookie = {{login.response.headers.Set-Cookie}}
+
+### Get Profile (Requires Bearer Token)
+GET http://localhost:3000/auth/profile
+Authorization: Bearer {{accessToken}}
+
+### Refresh Tokens (Manually passing the captured cookie)
+# @name refreshed
+POST http://localhost:3000/auth/refresh
+Content-Type: application/json
+Cookie: {{cookie}}
+
+### Update accessToken and NEW cookie from refresh response
+@newAccessToken = {{refreshed.response.body.accessToken}}
+@newCookie = {{refreshed.response.headers.Set-Cookie}}
+
+### Get Profile with NEW token
+GET http://localhost:3000/auth/profile
+Authorization: Bearer {{newAccessToken}}
+
+### Logout (Passes the cookie so the server can identify/clear it)
+POST http://localhost:3000/auth/logout
+Content-Type: application/json
+Cookie: {{newCookie}}
