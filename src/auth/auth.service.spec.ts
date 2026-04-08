@@ -31,6 +31,7 @@ describe('AuthService', () => {
 
   const mockJwtService = {
     signAsync: jest.fn(),
+    verifyAsync: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -152,6 +153,41 @@ describe('AuthService', () => {
       expect(mockAuthRepository.findByEmailOrUsername).toHaveBeenCalledWith(loginDto.identifier);
       expect(argon2.verify).toHaveBeenCalledWith(mockUser.password, loginDto.password);
       expect(mockJwtService.signAsync).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('refresh', () => {
+    it('should successfully refresh tokens', async () => {
+      const mockPayload = { sub: mockUser.id, username: mockUser.username };
+      const mockToken = 'valid-refresh-token';
+
+      jest.spyOn(mockJwtService, 'verifyAsync').mockResolvedValue(mockPayload);
+      mockJwtService.signAsync
+        .mockResolvedValueOnce('newAccessToken')
+        .mockResolvedValueOnce('newRefreshToken');
+
+      const result = await service.refresh(mockToken);
+
+      expect(mockJwtService.signAsync).toHaveBeenCalledTimes(2);
+      expect(result).toEqual({
+        accessToken: 'newAccessToken',
+        refreshToken: 'newRefreshToken',
+      });
+    });
+
+    it('should throw ConflictException if refresh token is invalid', async () => {
+      const mockToken = 'invalid-refresh-token';
+      jest.spyOn(mockJwtService, 'verifyAsync').mockRejectedValue(new Error());
+
+      await expect(service.refresh(mockToken)).rejects.toThrow(ConflictException);
+      await expect(service.refresh(mockToken)).rejects.toThrow('Invalid refresh token');
+    });
+  });
+
+  describe('logout', () => {
+    it('should return logout success message', () => {
+      const result = service.logout();
+      expect(result).toEqual({ message: 'Logged out successfully' });
     });
   });
 });

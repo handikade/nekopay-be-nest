@@ -81,8 +81,8 @@ describe('AuthController', () => {
       expect(cookieSpy).toHaveBeenCalledTimes(1);
       expect(cookieSpy).toHaveBeenCalledWith('refreshToken', tokens.refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: true,
+        sameSite: 'none',
         path: '/',
       });
 

@@ -100,8 +100,8 @@ export class AuthController {
     const { accessToken, refreshToken } = await this.authService.login(dto);
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       path: '/',
     });
     return { accessToken };
@@ -127,8 +127,8 @@ export class AuthController {
       const { accessToken, refreshToken } = await this.authService.refresh(token);
       res.cookie('refreshToken', refreshToken, {
         httpOnly: true,
-        secure: false,
-        sameSite: 'lax',
+        secure: true,
+        sameSite: 'none',
         path: '/',
       });
       return { accessToken };
@@ -146,8 +146,8 @@ export class AuthController {
   logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('refreshToken', {
       httpOnly: true,
-      secure: false,
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       path: '/',
     });
     return this.authService.logout();
