@@ -1,9 +1,13 @@
 generator client {
   provider = "prisma-client-js"
 }
-
 datasource db {
   provider = "postgresql"
+}
+
+enum UserRole {
+  admin
+  user
 }
 
 model User {
@@ -12,9 +16,26 @@ model User {
   email        String   @unique @db.VarChar(255)
   phone_number String?  @unique @db.VarChar(20)
   password     String
-  role         String   @default("user") @db.VarChar(10)
+  role         UserRole @default(user)
   created_at   DateTime @default(now()) @db.Timestamptz
   updated_at   DateTime @default(now()) @updatedAt @db.Timestamptz
 
   @@map("users")
+}
+
+enum TaxType {
+  INCLUSIVE
+  EXCLUSIVE
+}
+
+model Tax {
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code       String   @unique @db.VarChar(50)
+  rate       Decimal  @db.Decimal(5, 4)
+  type       TaxType
+  name       String   @db.VarChar(100)
+  created_at DateTime @default(now()) @db.Timestamptz
+  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  @@map("taxes")
 }
