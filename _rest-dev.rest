@@ -5,9 +5,9 @@ POST http://localhost:3000/auth/register
 Content-Type: application/json
 
 {
-    "email": "",
-    "username": "",
-    "password": ""
+    "email": "admin@nekopay.id",
+    "username": "admin",
+    "password": "neko1234"
 }
 
 ### Login and get Access Token
