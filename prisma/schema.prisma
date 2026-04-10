@@ -24,6 +24,8 @@ model User {
   created_at DateTime @default(now()) @db.Timestamptz
   updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
 
+  partners Partner[]
+
   @@map("users")
 }
 
@@ -97,6 +99,9 @@ model Partner {
   kelurahan_label String?       @db.VarChar(100)
   address         String?       @db.VarChar(255)
   postal_code     String?       @db.VarChar(10)
+
+  user_id         String        @db.Uuid
+  user            User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   created_at DateTime @default(now()) @db.Timestamptz
   updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
