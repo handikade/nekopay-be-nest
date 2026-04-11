@@ -103,7 +103,7 @@ export class PartnerRepository {
     skip?: number,
     take?: number,
     orderBy?: Prisma.PartnerOrderByWithRelationInput,
-  ): Promise<[number, any[]]> {
+  ): Promise<[number, Partial<Partner>[]]> {
     return this.prisma.$transaction([
       this.prisma.partner.count({ where: whereClause }),
       this.prisma.partner.findMany({

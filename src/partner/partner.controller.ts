@@ -22,7 +22,7 @@ interface AuthenticatedRequest extends Request {
   user: { id: string; username: string; role: string };
 }
 
-@ApiTags('partners d')
+@ApiTags('partners')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
 @Controller('partners')
