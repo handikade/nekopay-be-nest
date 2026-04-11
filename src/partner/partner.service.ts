@@ -4,9 +4,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, PartnerType } from '@prisma/client';
 import { CreatePartnerDto, CreatePartnerSchema } from './dto/create-partner.dto';
 import { UpdatePartnerDto, UpdatePartnerSchema } from './dto/update-partner.dto';
+import { FindAllPartnerDto, FindAllPartnerSchema } from './dto/find-all-partner.dto';
 import { PartnerRepository } from './partner.repository';
 
 export interface UserPayload {
@@ -49,12 +50,49 @@ export class PartnerService {
     return partner;
   }
 
-  async findAll(user: UserPayload) {
+  async findAll(user: UserPayload, query: FindAllPartnerDto) {
+    const validated = FindAllPartnerSchema.safeParse(query);
+    if (!validated.success) {
+      const firstIssue = validated.error.issues[0];
+      throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
+    }
+    const { page, limit, search, sortBy, sortOrder } = validated.data;
+    const skip = (page - 1) * limit;
+
     const where: Prisma.PartnerWhereInput = {};
     if (user.role !== 'admin') {
       where.user_id = user.id;
     }
-    return this.partnerRepository.findAll(where);
+
+    if (search) {
+      const orConditions: Prisma.PartnerWhereInput[] = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { company_email: { contains: search, mode: 'insensitive' } },
+      ];
+
+      const searchUpper = search.toUpperCase();
+      if (searchUpper === 'SUPPLIER' || searchUpper === 'BUYER') {
+        orConditions.push({ types: { has: searchUpper as PartnerType } });
+      }
+
+      where.OR = orConditions;
+    }
+
+    const orderBy: Prisma.PartnerOrderByWithRelationInput = {
+      [sortBy]: sortOrder,
+    };
+
+    const [total, data] = await this.partnerRepository.findAll(where, skip, limit, orderBy);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async update(id: string, user: UserPayload, dto: UpdatePartnerDto) {

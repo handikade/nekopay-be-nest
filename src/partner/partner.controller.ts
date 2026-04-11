@@ -1,8 +1,20 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreatePartnerDto } from './dto/create-partner.dto';
+import { FindAllPartnerDto } from './dto/find-all-partner.dto';
 import { UpdatePartnerDto } from './dto/update-partner.dto';
 import { PartnerService } from './partner.service';
 
@@ -38,10 +50,15 @@ export class PartnerController {
 
   @Get()
   @ApiOperation({ summary: 'Get all partners (optimized field selection)' })
+  @ApiQuery({ name: 'page', required: false, type: Number })
+  @ApiQuery({ name: 'limit', required: false, type: Number })
+  @ApiQuery({ name: 'search', required: false, type: String })
+  @ApiQuery({ name: 'sortBy', required: false, enum: ['created_at', 'updated_at', 'name'] })
+  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
   @ApiResponse({ status: 200, description: 'Return list of partners' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async findAll(@Req() req: AuthenticatedRequest) {
-    return this.partnerService.findAll(req.user);
+  async findAll(@Req() req: AuthenticatedRequest, @Query() query: FindAllPartnerDto) {
+    return this.partnerService.findAll(req.user, query);
   }
 
   @Get(':id')

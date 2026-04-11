@@ -98,18 +98,31 @@ export class PartnerRepository {
     });
   }
 
-  async findAll(whereClause: Prisma.PartnerWhereInput) {
-    return this.prisma.partner.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        name: true,
-        types: true,
-        legal_entity: true,
-        company_email: true,
-        company_phone: true,
-      },
-    });
+  async findAll(
+    whereClause: Prisma.PartnerWhereInput,
+    skip?: number,
+    take?: number,
+    orderBy?: Prisma.PartnerOrderByWithRelationInput,
+  ): Promise<[number, any[]]> {
+    return this.prisma.$transaction([
+      this.prisma.partner.count({ where: whereClause }),
+      this.prisma.partner.findMany({
+        where: whereClause,
+        skip,
+        take,
+        orderBy,
+        select: {
+          id: true,
+          name: true,
+          types: true,
+          legal_entity: true,
+          company_email: true,
+          company_phone: true,
+          created_at: true,
+          updated_at: true,
+        },
+      }),
+    ]);
   }
 
   async delete(id: string): Promise<Partner> {
