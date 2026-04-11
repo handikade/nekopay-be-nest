@@ -22,10 +22,10 @@ interface AuthenticatedRequest extends Request {
   user: { id: string; username: string; role: string };
 }
 
-@ApiTags('partner')
+@ApiTags('partners d')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
-@Controller('partner')
+@Controller('partners')
 export class PartnerController {
   constructor(private readonly partnerService: PartnerService) {}
 
