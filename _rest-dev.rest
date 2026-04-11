@@ -16,8 +16,8 @@ POST http://localhost:3000/auth/login
 Content-Type: application/json
 
 {
-    "identifier": "",
-    "password": ""
+    "identifier": "dika",
+    "password": "neko1234"
 }
 
 ### Capture both Access Token and the raw Set-Cookie header
@@ -46,3 +46,41 @@ Authorization: Bearer {{newAccessToken}}
 POST http://localhost:3000/auth/logout
 Content-Type: application/json
 Cookie: {{newCookie}}
+
+### Create a new Partner
+# @name createPartner
+POST http://localhost:3000/partner
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+    "name": "Neko Corp 2",
+    "type": "SUPPLIER",
+    "legal_entity": "PT",
+    "company_email": "hello2@nekocorp.com",
+    "company_phone": "02199887766"
+}
+
+###
+@partnerId = {{createPartner.response.body.id}}
+
+### Get all partner
+# @name getAllPartner
+GET http://localhost:3000/partner
+Authorization: Bearer {{accessToken}}
+
+### Get one partner
+# @name getOnePartner
+GET http://localhost:3000/partner/{{partnerId}}
+Authorization: Bearer {{accessToken}}
+
+### Update the existing Partner
+
+PATCH http://localhost:3000/partner/{{partnerId}}
+Authorization: Bearer {{accessToken}}
+Content-Type: application/json
+
+{
+    "address": "Jl. Kucing Meong No. 1",
+    "kota_label": "Jakarta Selatan"
+}
