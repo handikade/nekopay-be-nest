@@ -106,8 +106,9 @@ const taxes: Prisma.TaxCreateInput[] = [
 ];
 
 async function main() {
-  console.log('Seeding taxes...');
+  console.log('🚀 starting tax seed process...');
   console.log({ connectionString });
+
   for (const tax of taxes) {
     try {
       await prisma.tax.upsert({
@@ -124,17 +125,18 @@ async function main() {
           name: tax.name,
         },
       });
-      console.log('🎉 success upsert: ', tax.code);
-    } catch (e) {
-      console.log('Error while upsert', e);
+      console.log(`💳 seeded tax: ${tax.code}`);
+    } catch (error) {
+      console.error(`❌ error seeding tax ${tax.code}:`, error);
     }
   }
-  console.log('Seeding finished.');
+
+  console.log('🏁 seeding finished successfully.');
 }
 
 main()
   .catch((e: unknown) => {
-    console.error(e);
+    console.error('💥 fatal error during seeding:', e);
     process.exit(1);
   })
   .finally(async () => {

@@ -30,7 +30,7 @@ const rawUsers: Prisma.UserCreateInput[] = [
 ];
 
 async function main() {
-  console.log('🚀 Starting seed process...');
+  console.log('🚀 starting users seed process...');
 
   const hashedUsers = await Promise.all(
     rawUsers.map(async (user) => {
@@ -59,21 +59,21 @@ async function main() {
           role: userData.role,
         },
       });
-      console.log(`👤 Seeded user: ${user.email}`);
+      console.log(`👤 seeded user: ${user.email}`);
     } catch (error) {
-      console.error(`❌ Error seeding user ${userData.email}:`, error);
+      console.error(`❌ error seeding user ${userData.email}:`, error);
     }
   }
 
-  console.log('🏁 Seeding finished successfully.');
+  console.log('🏁 seeding finished successfully.');
 }
 
 main()
   .catch((e) => {
-    console.error('💥 Fatal error during seeding:', e);
+    console.error('💥 fatal error during seeding:', e);
     process.exit(1);
   })
   .finally(async () => {
     await prisma.$disconnect();
-    await pool.end(); // Important: Close the PG pool connection
+    await pool.end();
   });
