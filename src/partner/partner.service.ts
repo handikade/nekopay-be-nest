@@ -4,10 +4,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma, PartnerType } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import { CreatePartnerDto, CreatePartnerSchema } from './dto/create-partner.dto';
-import { UpdatePartnerDto, UpdatePartnerSchema } from './dto/update-partner.dto';
 import { FindAllPartnerDto, FindAllPartnerSchema } from './dto/find-all-partner.dto';
+import { UpdatePartnerDto, UpdatePartnerSchema } from './dto/update-partner.dto';
 import { PartnerRepository } from './partner.repository';
 
 export interface UserPayload {
@@ -56,7 +56,7 @@ export class PartnerService {
       const firstIssue = validated.error.issues[0];
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
     }
-    const { page, limit, search, sortBy, sortOrder } = validated.data;
+    const { page, limit, search, type, sortBy, sortOrder } = validated.data;
     const skip = (page - 1) * limit;
 
     const where: Prisma.PartnerWhereInput = {};
@@ -64,16 +64,15 @@ export class PartnerService {
       where.user_id = user.id;
     }
 
+    if (type && type.length > 0) {
+      where.types = { hasEvery: type };
+    }
+
     if (search) {
       const orConditions: Prisma.PartnerWhereInput[] = [
         { name: { contains: search, mode: 'insensitive' } },
         { company_email: { contains: search, mode: 'insensitive' } },
       ];
-
-      const searchUpper = search.toUpperCase();
-      if (searchUpper === 'SUPPLIER' || searchUpper === 'BUYER') {
-        orConditions.push({ types: { has: searchUpper as PartnerType } });
-      }
 
       where.OR = orConditions;
     }
