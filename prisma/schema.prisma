@@ -14,17 +14,15 @@ enum UserRole {
 }
 
 model User {
-  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  username     String   @unique @db.VarChar(50)
-  email        String   @unique @db.VarChar(255)
-  phone_number String?  @unique @db.VarChar(20)
+  id           String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  username     String    @unique @db.VarChar(50)
+  email        String    @unique @db.VarChar(255)
+  phone_number String?   @unique @db.VarChar(20)
   password     String
-  role         UserRole @default(user)
-
-  created_at DateTime @default(now()) @db.Timestamptz
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
-
-  partners Partner[]
+  role         UserRole  @default(user)
+  created_at   DateTime  @default(now()) @db.Timestamptz
+  updated_at   DateTime  @default(now()) @updatedAt @db.Timestamptz
+  partners     Partner[]
 
   @@map("users")
 }
@@ -39,12 +37,11 @@ enum TaxType {
 }
 
 model Tax {
-  id   String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  code String  @unique @db.VarChar(50)
-  rate Decimal @db.Decimal(5, 4)
-  type TaxType
-  name String  @db.VarChar(100)
-
+  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code       String   @unique @db.VarChar(50)
+  rate       Decimal  @db.Decimal(5, 4)
+  type       TaxType
+  name       String   @db.VarChar(100)
   created_at DateTime @default(now()) @db.Timestamptz
   updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
 
@@ -56,13 +53,11 @@ model Tax {
 // #region BANK
 
 model Bank {
-  id   String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  code String @unique @db.VarChar(50)
-  name String @db.VarChar(255)
-
-  created_at DateTime @default(now()) @db.Timestamptz
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
-
+  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code                  String               @unique @db.VarChar(50)
+  name                  String               @db.VarChar(255)
+  created_at            DateTime             @default(now()) @db.Timestamptz
+  updated_at            DateTime             @default(now()) @updatedAt @db.Timestamptz
   partner_bank_accounts PartnerBankAccount[]
 
   @@map("banks")
@@ -85,29 +80,27 @@ enum PartnerType {
 }
 
 model Partner {
-  id              String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  name            String        @db.VarChar(255)
-  types           PartnerType[]
-  legal_entity    PartnerEntity
-  company_email   String        @unique @db.VarChar(255)
-  company_phone   String        @db.VarChar(20)
-  provinsi_id     String?       @db.VarChar(10)
-  provinsi_label  String?       @db.VarChar(100)
-  kota_id         String?       @db.VarChar(10)
-  kota_label      String?       @db.VarChar(100)
-  kecamatan_id    String?       @db.VarChar(10)
-  kecamatan_label String?       @db.VarChar(100)
-  kelurahan_id    String?       @db.VarChar(10)
-  kelurahan_label String?       @db.VarChar(100)
-  address         String?       @db.VarChar(255)
-  postal_code     String?       @db.VarChar(10)
-
-  user_id         String        @db.Uuid
-  user            User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
-
-  created_at DateTime @default(now()) @db.Timestamptz
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
-
+  id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name                  String               @db.VarChar(255)
+  types                 PartnerType[]
+  legal_entity          PartnerEntity
+  company_email         String               @unique @db.VarChar(255)
+  company_phone         String               @db.VarChar(20)
+  provinsi_id           String?              @db.VarChar(10)
+  provinsi_label        String?              @db.VarChar(100)
+  kota_id               String?              @db.VarChar(10)
+  kota_label            String?              @db.VarChar(100)
+  kecamatan_id          String?              @db.VarChar(10)
+  kecamatan_label       String?              @db.VarChar(100)
+  kelurahan_id          String?              @db.VarChar(10)
+  kelurahan_label       String?              @db.VarChar(100)
+  address               String?              @db.VarChar(255)
+  postal_code           String?              @db.VarChar(10)
+  user_id               String               @db.Uuid
+  user                  User                 @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  created_at            DateTime             @default(now()) @db.Timestamptz
+  updated_at            DateTime             @default(now()) @updatedAt @db.Timestamptz
+  deleted_at            DateTime?            @db.Timestamptz
   partner_bank_accounts PartnerBankAccount[]
   contacts              PartnerContact[]
 
@@ -115,32 +108,28 @@ model Partner {
 }
 
 model PartnerContact {
-  id           String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  partner_id   String  @db.Uuid
-  name         String  @db.VarChar(255)
-  email        String? @db.VarChar(255)
-  phone_number String  @db.VarChar(20)
-
-  created_at DateTime @default(now()) @db.Timestamptz
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
-
-  partner Partner @relation(fields: [partner_id], references: [id], onDelete: Cascade)
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  partner_id   String   @db.Uuid
+  name         String   @db.VarChar(255)
+  email        String?  @db.VarChar(255)
+  phone_number String   @db.VarChar(20)
+  created_at   DateTime @default(now()) @db.Timestamptz
+  updated_at   DateTime @default(now()) @updatedAt @db.Timestamptz
+  partner      Partner  @relation(fields: [partner_id], references: [id], onDelete: Cascade)
 
   @@map("partner_contacts")
 }
 
 model PartnerBankAccount {
-  id             String @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  partner_id     String @db.Uuid
-  bank_id        String @db.Uuid
-  bank           Bank   @relation(fields: [bank_id], references: [id], onDelete: Restrict)
-  account_number String @db.VarChar(50)
-  account_name   String @db.VarChar(100)
-
-  created_at DateTime @default(now()) @db.Timestamptz
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
-
-  partner Partner @relation(fields: [partner_id], references: [id], onDelete: Cascade)
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  partner_id     String   @db.Uuid
+  bank_id        String   @db.Uuid
+  bank           Bank     @relation(fields: [bank_id], references: [id], onDelete: Restrict)
+  account_number String   @db.VarChar(50)
+  account_name   String   @db.VarChar(100)
+  created_at     DateTime @default(now()) @db.Timestamptz
+  updated_at     DateTime @default(now()) @updatedAt @db.Timestamptz
+  partner        Partner  @relation(fields: [partner_id], references: [id], onDelete: Cascade)
 
   @@map("partner_bank_accounts")
 }
