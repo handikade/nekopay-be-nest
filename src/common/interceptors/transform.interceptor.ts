@@ -27,6 +27,26 @@ export class TransformInterceptor<T> implements NestInterceptor<T, Response<T>> 
           };
         }
 
+        // Check if the service returns custom message and data
+        if (
+          typeof resData === 'object' &&
+          resData !== null &&
+          'data' in resData &&
+          'message' in resData
+        ) {
+          const customRes = resData as {
+            data: T;
+            message: string;
+            meta?: Record<string, unknown>;
+          };
+          return {
+            statusCode,
+            message: customRes.message,
+            data: customRes.data,
+            meta: customRes.meta,
+          };
+        }
+
         // Check if the service already returns data and meta (e.g., from pagination)
         if (
           typeof resData === 'object' &&
