@@ -12,8 +12,10 @@ describe('AuthRepository', () => {
     email: 'test@example.com',
     username: 'testuser',
     password: 'hashedpassword123',
-    createdAt: new Date(),
-    updatedAt: new Date(),
+    phone_number: null,
+    role: 'user',
+    created_at: new Date(),
+    updated_at: new Date(),
   };
 
   const mockPrismaService = {
