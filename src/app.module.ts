@@ -6,9 +6,10 @@ import { HealthModule } from './health/health.module';
 import { PartnerModule } from './partner/partner.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { BankModule } from './bank/bank.module';
+import { RegionModule } from './region/region.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, HealthModule, PartnerModule, BankModule],
+  imports: [PrismaModule, AuthModule, HealthModule, PartnerModule, BankModule, RegionModule],
   controllers: [AppController],
   providers: [AppService],
 })
