@@ -34,9 +34,9 @@ export class PartnerService {
     return this.partnerRepository.create(validated.data as CreatePartnerDto);
   }
 
-  async findById(id: string, user: UserPayload) {
+  async findById(id: string, user: UserPayload, includeDeleted: boolean = false) {
     const isAdmin = user.role === 'admin';
-    const partner = await this.partnerRepository.findById(id, isAdmin);
+    const partner = await this.partnerRepository.findById(id, isAdmin, includeDeleted);
 
     if (!partner) {
       throw new NotFoundException('Partner not found');
@@ -113,5 +113,17 @@ export class PartnerService {
     await this.findById(id, user);
 
     return this.partnerRepository.delete(id);
+  }
+
+  async restore(id: string, user: UserPayload) {
+    // Only admin can restore
+    if (user.role !== 'admin') {
+      throw new ForbiddenException('Only administrators can restore a partner');
+    }
+
+    // Determine if partner exists (even if deleted)
+    await this.findById(id, user, true);
+
+    return this.partnerRepository.restore(id);
   }
 }

@@ -73,9 +73,12 @@ export class PartnerRepository {
     });
   }
 
-  async findById(id: string, includeUser: boolean = false) {
-    return this.prisma.partner.findUnique({
-      where: { id },
+  async findById(id: string, includeUser: boolean = false, includeDeleted: boolean = false) {
+    return this.prisma.partner.findFirst({
+      where: {
+        id,
+        deleted_at: includeDeleted ? undefined : null,
+      },
       include: {
         contacts: true,
         partner_bank_accounts: {
@@ -104,10 +107,15 @@ export class PartnerRepository {
     take?: number,
     orderBy?: Prisma.PartnerOrderByWithRelationInput,
   ): Promise<[number, Partial<Partner>[]]> {
+    const finalWhere: Prisma.PartnerWhereInput = {
+      ...whereClause,
+      deleted_at: null,
+    };
+
     return this.prisma.$transaction([
-      this.prisma.partner.count({ where: whereClause }),
+      this.prisma.partner.count({ where: finalWhere }),
       this.prisma.partner.findMany({
-        where: whereClause,
+        where: finalWhere,
         skip,
         take,
         orderBy,
@@ -126,8 +134,24 @@ export class PartnerRepository {
   }
 
   async delete(id: string): Promise<Partner> {
-    return this.prisma.partner.delete({
+    return this.prisma.partner.update({
       where: { id },
+      data: { deleted_at: new Date() },
+      include: {
+        contacts: true,
+        partner_bank_accounts: {
+          include: {
+            bank: true,
+          },
+        },
+      },
+    });
+  }
+
+  async restore(id: string): Promise<Partner> {
+    return this.prisma.partner.update({
+      where: { id },
+      data: { deleted_at: null },
       include: {
         contacts: true,
         partner_bank_accounts: {

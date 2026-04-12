@@ -105,4 +105,17 @@ export class PartnerController {
   async remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.partnerService.delete(id, req.user);
   }
+
+  @Patch(':id/restore')
+  @ApiOperation({ summary: 'Restore a deleted partner (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Partner successfully restored' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({
+    status: 403,
+    description: 'Forbidden (Only admin can restore or partner not belong to user)',
+  })
+  @ApiResponse({ status: 404, description: 'Partner not found' })
+  async restore(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.partnerService.restore(id, req.user);
+  }
 }
