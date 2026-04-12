@@ -106,20 +106,44 @@ export class PartnerRepository {
     skip?: number,
     take?: number,
     orderBy?: Prisma.PartnerOrderByWithRelationInput,
+    isAdmin: boolean = false,
   ): Promise<[number, Partial<Partner>[]]> {
     const finalWhere: Prisma.PartnerWhereInput = {
       ...whereClause,
       deleted_at: null,
     };
 
-    return this.prisma.$transaction([
-      this.prisma.partner.count({ where: finalWhere }),
-      this.prisma.partner.findMany({
-        where: finalWhere,
-        skip,
-        take,
-        orderBy,
-        select: {
+    const select: Prisma.PartnerSelect = isAdmin
+      ? {
+          id: true,
+          name: true,
+          types: true,
+          legal_entity: true,
+          company_email: true,
+          company_phone: true,
+          provinsi_id: true,
+          provinsi_label: true,
+          kota_id: true,
+          kota_label: true,
+          kecamatan_id: true,
+          kecamatan_label: true,
+          kelurahan_id: true,
+          kelurahan_label: true,
+          address: true,
+          postal_code: true,
+          user_id: true,
+          created_at: true,
+          updated_at: true,
+          deleted_at: true,
+          user: {
+            select: {
+              id: true,
+              username: true,
+              email: true,
+            },
+          },
+        }
+      : {
           id: true,
           name: true,
           types: true,
@@ -128,7 +152,16 @@ export class PartnerRepository {
           company_phone: true,
           created_at: true,
           updated_at: true,
-        },
+        };
+
+    return this.prisma.$transaction([
+      this.prisma.partner.count({ where: finalWhere }),
+      this.prisma.partner.findMany({
+        where: finalWhere,
+        skip,
+        take,
+        orderBy,
+        select,
       }),
     ]);
   }

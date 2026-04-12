@@ -81,7 +81,14 @@ export class PartnerService {
       [sortBy]: sortOrder,
     };
 
-    const [total, data] = await this.partnerRepository.findAll(where, skip, limit, orderBy);
+    const isAdmin = user.role === 'admin';
+    const [total, data] = await this.partnerRepository.findAll(
+      where,
+      skip,
+      limit,
+      orderBy,
+      isAdmin,
+    );
 
     return {
       data,
