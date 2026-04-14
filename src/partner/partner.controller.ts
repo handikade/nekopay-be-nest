@@ -10,7 +10,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreatePartnerDto } from './dto/create-partner.dto';
@@ -29,8 +29,10 @@ interface AuthenticatedRequest extends Request {
 export class PartnerController {
   constructor(private readonly partnerService: PartnerService) {}
 
+  /**
+   * Create a new partner
+   */
   @Post()
-  @ApiOperation({ summary: 'Create a new partner' })
   @ApiResponse({
     status: 201,
     description: 'Partner successfully created',
@@ -48,22 +50,20 @@ export class PartnerController {
     return this.partnerService.create(req.user.id, dto);
   }
 
+  /**
+   * Get all partners (optimized field selection)
+   */
   @Get()
-  @ApiOperation({ summary: 'Get all partners (optimized field selection)' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'type', required: false, enum: ['SUPPLIER', 'BUYER'], isArray: true })
-  @ApiQuery({ name: 'sortBy', required: false, enum: ['created_at', 'updated_at', 'name'] })
-  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
   @ApiResponse({ status: 200, description: 'Return list of partners' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findAll(@Req() req: AuthenticatedRequest, @Query() query: FindAllPartnerDto) {
     return this.partnerService.findAll(req.user, query);
   }
 
+  /**
+   * Get a specific partner by id
+   */
   @Get(':id')
-  @ApiOperation({ summary: 'Get a specific partner by id' })
   @ApiResponse({ status: 200, description: 'Return the specific partner' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -72,8 +72,10 @@ export class PartnerController {
     return this.partnerService.findById(id, req.user);
   }
 
+  /**
+   * Update an existing partner
+   */
   @Patch(':id')
-  @ApiOperation({ summary: 'Update an existing partner' })
   @ApiResponse({
     status: 200,
     description: 'Partner successfully updated',
@@ -96,8 +98,10 @@ export class PartnerController {
     return this.partnerService.update(id, req.user, dto);
   }
 
+  /**
+   * Delete a partner
+   */
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a partner' })
   @ApiResponse({ status: 200, description: 'Partner successfully deleted' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
@@ -106,8 +110,10 @@ export class PartnerController {
     return this.partnerService.delete(id, req.user);
   }
 
+  /**
+   * Restore a deleted partner (Admin only)
+   */
   @Patch(':id/restore')
-  @ApiOperation({ summary: 'Restore a deleted partner (Admin only)' })
   @ApiResponse({ status: 200, description: 'Partner successfully restored' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({

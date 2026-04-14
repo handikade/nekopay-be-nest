@@ -11,7 +11,7 @@ import {
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { ApiBearerAuth, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
 import type { Response, Request } from 'express';
@@ -26,8 +26,10 @@ interface AuthenticatedRequest extends Request {
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
+  /**
+   * Register a new user account
+   */
   @Post('register')
-  @ApiOperation({ summary: 'Register a new user account' })
   @ApiResponse({
     status: 201,
     description: 'User successfully registered',
@@ -62,8 +64,10 @@ export class AuthController {
     return this.authService.register(dto);
   }
 
+  /**
+   * Log in and receive tokens
+   */
   @Post('login')
-  @ApiOperation({ summary: 'Log in and receive tokens' })
   @ApiResponse({
     status: 201,
     description: 'Login successful, returns access token',
@@ -107,8 +111,10 @@ export class AuthController {
     return { accessToken };
   }
 
+  /**
+   * Refresh access token
+   */
   @Post('refresh')
-  @ApiOperation({ summary: 'Refresh access token' })
   @ApiResponse({
     status: 201,
     description: 'Refresh successful, returns new access token',
@@ -137,8 +143,10 @@ export class AuthController {
     }
   }
 
+  /**
+   * Log out and clear tokens
+   */
   @Post('logout')
-  @ApiOperation({ summary: 'Log out and clear tokens' })
   @ApiResponse({
     status: 201,
     description: 'Logout successful',
@@ -156,11 +164,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get('profile')
-  @ApiOperation({ summary: 'Get current user profile' })
-  @ApiResponse({
-    status: 200,
-    description: 'Returns the user profile',
-  })
+  /**
+   * Get current user profile
+   */
   getProfile(@Req() req: AuthenticatedRequest) {
     return req.user;
   }

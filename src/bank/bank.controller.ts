@@ -10,7 +10,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { BankService } from './bank.service';
@@ -29,8 +29,10 @@ interface AuthenticatedRequest extends Request {
 export class BankController {
   constructor(private readonly bankService: BankService) {}
 
+  /**
+   * Create a new bank
+   */
   @Post()
-  @ApiOperation({ summary: 'Create a new bank' })
   @ApiResponse({
     status: 201,
     description: 'Bank successfully created',
@@ -51,21 +53,20 @@ export class BankController {
     return this.bankService.create(req.user, dto);
   }
 
+  /**
+   * Get all banks
+   */
   @Get()
-  @ApiOperation({ summary: 'Get all banks' })
-  @ApiQuery({ name: 'page', required: false, type: Number })
-  @ApiQuery({ name: 'limit', required: false, type: Number })
-  @ApiQuery({ name: 'search', required: false, type: String })
-  @ApiQuery({ name: 'sortBy', required: false, enum: ['created_at', 'updated_at', 'name', 'code'] })
-  @ApiQuery({ name: 'sortOrder', required: false, enum: ['asc', 'desc'] })
   @ApiResponse({ status: 200, description: 'Return list of banks' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findAll(@Req() req: AuthenticatedRequest, @Query() query: FindAllBankDto) {
     return this.bankService.findAll(req.user, query);
   }
 
+  /**
+   * Get a specific bank by id
+   */
   @Get(':id')
-  @ApiOperation({ summary: 'Get a specific bank by id' })
   @ApiResponse({ status: 200, description: 'Return the specific bank' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Bank not found' })
@@ -73,8 +74,10 @@ export class BankController {
     return this.bankService.findById(id);
   }
 
+  /**
+   * Update an existing bank
+   */
   @Put(':id')
-  @ApiOperation({ summary: 'Update an existing bank' })
   @ApiResponse({
     status: 200,
     description: 'Bank successfully updated',
@@ -97,8 +100,10 @@ export class BankController {
     return this.bankService.update(id, req.user, dto);
   }
 
+  /**
+   * Delete a bank
+   */
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete a bank' })
   @ApiResponse({ status: 200, description: 'Bank successfully deleted' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden (Admin only)' })

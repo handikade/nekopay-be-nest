@@ -1,5 +1,5 @@
 import { Controller, Get, Param } from '@nestjs/common';
-import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiResponse, ApiTags } from '@nestjs/swagger';
 import {
   CitiesResponse,
   CityDto,
@@ -17,8 +17,10 @@ import { RegionService } from './region.service';
 export class RegionController {
   constructor(private readonly regionService: RegionService) {}
 
+  /**
+   * Get all provinces
+   */
   @Get('provinces')
-  @ApiOperation({ summary: 'Get all provinces' })
   @ApiResponse({ type: [ProvinceDto] })
   async findAllProvinces() {
     const result: ProvincesResponse = await this.regionService.findAllProvinces();
@@ -28,8 +30,10 @@ export class RegionController {
     };
   }
 
+  /**
+   * Get all cities by province ID
+   */
   @Get('cities/:provinceId')
-  @ApiOperation({ summary: 'Get all cities by province ID' })
   @ApiResponse({ type: [CityDto] })
   async findAllCities(@Param('provinceId') provinceId: string) {
     const result: CitiesResponse = await this.regionService.findAllCities(provinceId);
@@ -39,8 +43,10 @@ export class RegionController {
     };
   }
 
+  /**
+   * Get all districts by city ID
+   */
   @Get('districts/:cityId')
-  @ApiOperation({ summary: 'Get all districts by city ID' })
   @ApiResponse({ type: [DistrictDto] })
   async findAllDistricts(@Param('cityId') cityId: string) {
     const result: DistrictsResponse = await this.regionService.findAllDistricts(cityId);
@@ -50,8 +56,10 @@ export class RegionController {
     };
   }
 
+  /**
+   * Get all villages by district ID
+   */
   @Get('villages/:districtId')
-  @ApiOperation({ summary: 'Get all villages by district ID' })
   @ApiResponse({ type: [VillageDto] })
   async findAllVillages(@Param('districtId') districtId: string) {
     const result: VillagesResponse = await this.regionService.findAllVillages(districtId);
