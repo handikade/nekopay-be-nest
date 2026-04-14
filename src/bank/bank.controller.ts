@@ -10,7 +10,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { BankService } from './bank.service';
@@ -66,6 +66,7 @@ export class BankController {
   /**
    * Get a specific bank by id
    */
+  @ApiExcludeEndpoint()
   @Get(':id')
   @ApiResponse({ status: 200, description: 'Return the specific bank' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

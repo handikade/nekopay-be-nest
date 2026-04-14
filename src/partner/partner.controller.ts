@@ -10,7 +10,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CreatePartnerDto } from './dto/create-partner.dto';
@@ -113,6 +113,7 @@ export class PartnerController {
   /**
    * Restore a deleted partner (Admin only)
    */
+  @ApiExcludeEndpoint()
   @Patch(':id/restore')
   @ApiResponse({ status: 200, description: 'Partner successfully restored' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })

@@ -1,20 +1,20 @@
 import {
-  Controller,
-  Post,
   Body,
-  Res,
-  Req,
-  UnauthorizedException,
+  Controller,
   Get,
+  Post,
+  Req,
+  Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { ApiBearerAuth, ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
 
-import type { Response, Request } from 'express';
+import type { Request, Response } from 'express';
 
 interface AuthenticatedRequest extends Request {
   user: { id: string; username: string; role: string };
@@ -161,6 +161,7 @@ export class AuthController {
     return this.authService.logout();
   }
 
+  @ApiExcludeEndpoint()
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   @Get('profile')

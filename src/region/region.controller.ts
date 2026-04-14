@@ -12,7 +12,7 @@ import {
 } from './dto/region.dto';
 import { RegionService } from './region.service';
 
-@ApiTags('Regions')
+@ApiTags('regions')
 @Controller('regions')
 export class RegionController {
   constructor(private readonly regionService: RegionService) {}
