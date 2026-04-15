@@ -1,11 +1,11 @@
 import { HttpAdapterHost, NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
-import cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { cleanupOpenApiDoc } from 'nestjs-zod';
 import { apiReference } from '@scalar/nestjs-api-reference';
-import { TransformInterceptor } from './common/interceptors/transform.interceptor';
-import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
+import cookieParser from 'cookie-parser';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
+import { AllExceptionsFilter } from './_core/filters/all-exceptions.filter';
+import { TransformInterceptor } from './_core/interceptors/transform.interceptor';
+import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);

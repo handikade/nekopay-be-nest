@@ -1,7 +1,7 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { HealthService } from './health.service';
-import { PrismaService } from '../prisma/prisma.service';
 import { InternalServerErrorException } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { PrismaService } from '../prisma/prisma.service';
+import { HealthService } from './health.service';
 
 describe('HealthService', () => {
   let service: HealthService;

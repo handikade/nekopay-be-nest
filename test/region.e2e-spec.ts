@@ -1,9 +1,9 @@
+import { HttpService } from '@nestjs/axios';
 import { INestApplication } from '@nestjs/common';
+import { AxiosRequestHeaders, AxiosResponse } from 'axios';
+import { of } from 'rxjs';
 import request from 'supertest';
 import { createE2EApp } from './e2e-helper';
-import { HttpService } from '@nestjs/axios';
-import { of } from 'rxjs';
-import { AxiosResponse, AxiosRequestHeaders } from 'axios';
 
 describe('RegionController (e2e)', () => {
   let app: INestApplication;

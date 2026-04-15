@@ -1,9 +1,9 @@
-import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
-import * as argon2 from 'argon2';
+import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import * as argon2 from 'argon2';
 import { AuthRepository } from './auth.repository';
-import { RegisterDto, RegisterSchema } from './dto/register.dto';
 import { LoginDto, LoginSchema } from './dto/login.dto';
+import { RegisterDto, RegisterSchema } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {

@@ -5,10 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { CreateBankDto, CreateBankSchema } from './dto/create-bank.dto';
-import { UpdateBankDto, UpdateBankSchema } from './dto/update-bank.dto';
-import { FindAllBankDto, FindAllBankSchema } from './dto/find-all-bank.dto';
 import { BankRepository } from './bank.repository';
+import { CreateBankDto, CreateBankSchema } from './dto/create-bank.dto';
+import { FindAllBankDto, FindAllBankSchema } from './dto/find-all-bank.dto';
+import { UpdateBankDto, UpdateBankSchema } from './dto/update-bank.dto';
 
 export interface UserPayload {
   id: string;

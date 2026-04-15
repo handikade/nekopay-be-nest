@@ -14,6 +14,7 @@ import { ApiBearerAuth, ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { BankService } from './bank.service';
+import { BankDto, PaginatedBanksResponseDto } from './dto/bank.dto';
 import { CreateBankDto } from './dto/create-bank.dto';
 import { FindAllBankDto } from './dto/find-all-bank.dto';
 import { UpdateBankDto } from './dto/update-bank.dto';
@@ -32,10 +33,12 @@ export class BankController {
   /**
    * Create a new bank
    */
+  @ApiExcludeEndpoint()
   @Post()
   @ApiResponse({
     status: 201,
     description: 'Bank successfully created',
+    type: BankDto,
   })
   @ApiResponse({
     status: 400,
@@ -49,7 +52,7 @@ export class BankController {
     status: 403,
     description: 'Forbidden (Admin only)',
   })
-  async create(@Req() req: AuthenticatedRequest, @Body() dto: CreateBankDto) {
+  async create(@Req() req: AuthenticatedRequest, @Body() dto: CreateBankDto): Promise<BankDto> {
     return this.bankService.create(req.user, dto);
   }
 
@@ -57,9 +60,16 @@ export class BankController {
    * Get all banks
    */
   @Get()
-  @ApiResponse({ status: 200, description: 'Return list of banks' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return list of banks',
+    type: PaginatedBanksResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async findAll(@Req() req: AuthenticatedRequest, @Query() query: FindAllBankDto) {
+  async findAll(
+    @Req() req: AuthenticatedRequest,
+    @Query() query: FindAllBankDto,
+  ): Promise<PaginatedBanksResponseDto> {
     return this.bankService.findAll(req.user, query);
   }
 
@@ -68,20 +78,22 @@ export class BankController {
    */
   @ApiExcludeEndpoint()
   @Get(':id')
-  @ApiResponse({ status: 200, description: 'Return the specific bank' })
+  @ApiResponse({ status: 200, description: 'Return the specific bank', type: BankDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Bank not found' })
-  async findOne(@Param('id') id: string) {
+  async findOne(@Param('id') id: string): Promise<BankDto> {
     return this.bankService.findById(id);
   }
 
   /**
    * Update an existing bank
    */
+  @ApiExcludeEndpoint()
   @Put(':id')
   @ApiResponse({
     status: 200,
     description: 'Bank successfully updated',
+    type: BankDto,
   })
   @ApiResponse({
     status: 400,
@@ -97,19 +109,20 @@ export class BankController {
     @Param('id') id: string,
     @Req() req: AuthenticatedRequest,
     @Body() dto: UpdateBankDto,
-  ) {
+  ): Promise<BankDto> {
     return this.bankService.update(id, req.user, dto);
   }
 
   /**
    * Delete a bank
    */
+  @ApiExcludeEndpoint()
   @Delete(':id')
-  @ApiResponse({ status: 200, description: 'Bank successfully deleted' })
+  @ApiResponse({ status: 200, description: 'Bank successfully deleted', type: BankDto })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden (Admin only)' })
   @ApiResponse({ status: 404, description: 'Bank not found' })
-  async remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+  async remove(@Param('id') id: string, @Req() req: AuthenticatedRequest): Promise<BankDto> {
     return this.bankService.delete(id, req.user);
   }
 }

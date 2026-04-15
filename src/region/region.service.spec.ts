@@ -1,8 +1,8 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { HttpService } from '@nestjs/axios';
+import { Test, TestingModule } from '@nestjs/testing';
+import { AxiosRequestHeaders, AxiosResponse } from 'axios';
 import { of } from 'rxjs';
 import { RegionService } from './region.service';
-import { AxiosResponse, AxiosRequestHeaders } from 'axios';
 
 /* eslint-disable @typescript-eslint/unbound-method */
 

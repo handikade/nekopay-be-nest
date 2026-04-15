@@ -32,7 +32,7 @@ export class BankRepository {
     skip?: number,
     take?: number,
     orderBy?: Prisma.BankOrderByWithRelationInput,
-  ): Promise<[number, Partial<Bank>[]]> {
+  ): Promise<[number, Bank[]]> {
     return this.prisma.$transaction([
       this.prisma.bank.count({ where: whereClause }),
       this.prisma.bank.findMany({
@@ -40,13 +40,6 @@ export class BankRepository {
         skip,
         take,
         orderBy,
-        select: {
-          id: true,
-          code: true,
-          name: true,
-          created_at: true,
-          updated_at: true,
-        },
       }),
     ]);
   }

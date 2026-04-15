@@ -2,10 +2,10 @@ import { INestApplication } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
 import { Test, TestingModule } from '@nestjs/testing';
 import cookieParser from 'cookie-parser';
-import { AppModule } from '../src/app.module';
-import { AllExceptionsFilter } from '../src/common/filters/all-exceptions.filter';
-import { TransformInterceptor } from '../src/common/interceptors/transform.interceptor';
 import request from 'supertest';
+import { AllExceptionsFilter } from '../src/_core/filters/all-exceptions.filter';
+import { TransformInterceptor } from '../src/_core/interceptors/transform.interceptor';
+import { AppModule } from '../src/app.module';
 
 export interface AppResponse<T = unknown> {
   statusCode: number;

@@ -1,12 +1,12 @@
-import { Test, TestingModule } from '@nestjs/testing';
-import { AuthService } from './auth.service';
-import { AuthRepository } from './auth.repository';
-import { JwtService } from '@nestjs/jwt';
 import { ConflictException } from '@nestjs/common';
-import * as argon2 from 'argon2';
-import { RegisterDto } from './dto/register.dto';
-import { LoginDto } from './dto/login.dto';
+import { JwtService } from '@nestjs/jwt';
+import { Test, TestingModule } from '@nestjs/testing';
 import { User } from '@prisma/client';
+import * as argon2 from 'argon2';
+import { AuthRepository } from './auth.repository';
+import { AuthService } from './auth.service';
+import { LoginDto } from './dto/login.dto';
+import { RegisterDto } from './dto/register.dto';
 
 jest.mock('argon2');
 

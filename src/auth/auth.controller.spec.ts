@@ -1,9 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { Response } from 'express';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
-import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
-import { Response } from 'express';
+import { RegisterDto } from './dto/register.dto';
 
 describe('AuthController', () => {
   let controller: AuthController;
