@@ -15,6 +15,19 @@ export const CreatePartnerBankAccountSchema = z.object({
 
 const optionalString = z.string().optional().nullable();
 
+export const PartnerAddressSchema = z.object({
+  provinsi_id: optionalString.describe('Province ID'),
+  provinsi_label: optionalString.describe('Province name'),
+  kota_id: optionalString.describe('City/Regency ID'),
+  kota_label: optionalString.describe('City/Regency name'),
+  kecamatan_id: optionalString.describe('District ID'),
+  kecamatan_label: optionalString.describe('District name'),
+  kelurahan_id: optionalString.describe('Sub-district ID'),
+  kelurahan_label: optionalString.describe('Sub-district name'),
+  address: optionalString.describe('Full office address'),
+  postal_code: optionalString.describe('Postal code'),
+});
+
 export const CreatePartnerSchema = z.object({
   user_id: z.uuid().describe('User ID the partner belongs to'),
   name: z.string().min(1).describe('Partner company name'),
@@ -31,16 +44,7 @@ export const CreatePartnerSchema = z.object({
   company_email: z.email().describe('Official company email'),
   company_phone: z.string().min(1).describe('Official company phone number'),
 
-  provinsi_id: optionalString.describe('Province ID'),
-  provinsi_label: optionalString.describe('Province name'),
-  kota_id: optionalString.describe('City/Regency ID'),
-  kota_label: optionalString.describe('City/Regency name'),
-  kecamatan_id: optionalString.describe('District ID'),
-  kecamatan_label: optionalString.describe('District name'),
-  kelurahan_id: optionalString.describe('Sub-district ID'),
-  kelurahan_label: optionalString.describe('Sub-district name'),
-  address: optionalString.describe('Full office address'),
-  postal_code: optionalString.describe('Postal code'),
+  ...PartnerAddressSchema.shape,
 
   contacts: z.array(CreatePartnerContactSchema).optional().describe('List of contact persons'),
   partner_bank_accounts: z
