@@ -53,4 +53,4 @@ export const CreatePartnerSchema = z.object({
     .describe('List of bank accounts'),
 });
 
-export class CreatePartnerDto extends createZodDto(CreatePartnerSchema) {}
+export class PartnerCreatePayloadDto extends createZodDto(CreatePartnerSchema) {}

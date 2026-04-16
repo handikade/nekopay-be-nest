@@ -13,9 +13,10 @@ import {
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { CreatePartnerDto } from './dto/create-partner.dto';
-import { FindAllPartnerDto } from './dto/find-all-partner.dto';
-import { UpdatePartnerDto } from './dto/update-partner.dto';
+import { PartnerCreatePayloadDto } from './dto/partner-create-payload.dto';
+import { PartnerQueryDto } from './dto/partner-query.dto';
+import { PartnerUpdatePayloadDto } from './dto/partner-update-payload.dto';
+import { PartnerListResponseDto, PartnerSingleResponseDto } from './dto/partner.dto';
 import { PartnerService } from './partner.service';
 
 interface AuthenticatedRequest extends Request {
@@ -36,6 +37,7 @@ export class PartnerController {
   @ApiResponse({
     status: 201,
     description: 'Partner successfully created',
+    type: PartnerSingleResponseDto,
   })
   @ApiResponse({
     status: 400,
@@ -45,18 +47,21 @@ export class PartnerController {
     status: 401,
     description: 'Unauthorized',
   })
-  async create(@Req() req: AuthenticatedRequest, @Body() dto: CreatePartnerDto) {
-    // Overriding / providing user_id from the authenticated user
+  async create(@Req() req: AuthenticatedRequest, @Body() dto: PartnerCreatePayloadDto) {
     return this.partnerService.create(req.user.id, dto);
   }
 
   /**
-   * Get all partners (optimized field selection)
+   * Get all partners
    */
   @Get()
-  @ApiResponse({ status: 200, description: 'Return list of partners' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return list of partners',
+    type: PartnerListResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
-  async findAll(@Req() req: AuthenticatedRequest, @Query() query: FindAllPartnerDto) {
+  async findAll(@Req() req: AuthenticatedRequest, @Query() query: PartnerQueryDto) {
     return this.partnerService.findAll(req.user, query);
   }
 
@@ -64,7 +69,11 @@ export class PartnerController {
    * Get a specific partner by id
    */
   @Get(':id')
-  @ApiResponse({ status: 200, description: 'Return the specific partner' })
+  @ApiResponse({
+    status: 200,
+    description: 'Return the specific partner',
+    type: PartnerSingleResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Partner not found' })
@@ -79,6 +88,7 @@ export class PartnerController {
   @ApiResponse({
     status: 200,
     description: 'Partner successfully updated',
+    type: PartnerSingleResponseDto,
   })
   @ApiResponse({
     status: 400,
@@ -93,7 +103,7 @@ export class PartnerController {
   async update(
     @Param('id') id: string,
     @Req() req: AuthenticatedRequest,
-    @Body() dto: UpdatePartnerDto,
+    @Body() dto: PartnerUpdatePayloadDto,
   ) {
     return this.partnerService.update(id, req.user, dto);
   }
@@ -102,7 +112,11 @@ export class PartnerController {
    * Delete a partner
    */
   @Delete(':id')
-  @ApiResponse({ status: 200, description: 'Partner successfully deleted' })
+  @ApiResponse({
+    status: 200,
+    description: 'Partner successfully deleted',
+    type: PartnerSingleResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 403, description: 'Forbidden' })
   @ApiResponse({ status: 404, description: 'Partner not found' })
@@ -115,7 +129,11 @@ export class PartnerController {
    */
   @ApiExcludeEndpoint()
   @Patch(':id/restore')
-  @ApiResponse({ status: 200, description: 'Partner successfully restored' })
+  @ApiResponse({
+    status: 200,
+    description: 'Partner successfully restored',
+    type: PartnerSingleResponseDto,
+  })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({
     status: 403,

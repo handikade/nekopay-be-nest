@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { Partner, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreatePartnerDto } from './dto/create-partner.dto';
-import { UpdatePartnerDto } from './dto/update-partner.dto';
+import { PartnerCreatePayloadDto } from './dto/partner-create-payload.dto';
+import { PartnerUpdatePayloadDto } from './dto/partner-update-payload.dto';
 
 @Injectable()
 export class PartnerRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: CreatePartnerDto): Promise<Partner> {
+  async create(data: PartnerCreatePayloadDto): Promise<Partner> {
     const { contacts, partner_bank_accounts, ...partnerData } = data;
 
     return this.prisma.partner.create({
@@ -36,7 +36,7 @@ export class PartnerRepository {
     });
   }
 
-  async update(id: string, data: UpdatePartnerDto): Promise<Partner> {
+  async update(id: string, data: PartnerUpdatePayloadDto): Promise<Partner> {
     const { contacts, partner_bank_accounts, ...partnerData } = data;
 
     const updatePayload: Prisma.PartnerUpdateInput = {

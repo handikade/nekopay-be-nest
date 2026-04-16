@@ -16,4 +16,4 @@ export const FindAllPartnerSchema = z.object({
   sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
 });
 
-export class FindAllPartnerDto extends createZodDto(FindAllPartnerSchema) {}
+export class PartnerQueryDto extends createZodDto(FindAllPartnerSchema) {}

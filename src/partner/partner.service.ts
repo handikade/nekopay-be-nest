@@ -5,9 +5,9 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { CreatePartnerDto, CreatePartnerSchema } from './dto/create-partner.dto';
-import { FindAllPartnerDto, FindAllPartnerSchema } from './dto/find-all-partner.dto';
-import { UpdatePartnerDto, UpdatePartnerSchema } from './dto/update-partner.dto';
+import { CreatePartnerSchema, PartnerCreatePayloadDto } from './dto/partner-create-payload.dto';
+import { FindAllPartnerSchema, PartnerQueryDto } from './dto/partner-query.dto';
+import { PartnerUpdatePayloadDto, UpdatePartnerSchema } from './dto/partner-update-payload.dto';
 import { PartnerRepository } from './partner.repository';
 
 export interface UserPayload {
@@ -20,7 +20,7 @@ export interface UserPayload {
 export class PartnerService {
   constructor(private readonly partnerRepository: PartnerRepository) {}
 
-  async create(userId: string, dto: CreatePartnerDto) {
+  async create(userId: string, dto: PartnerCreatePayloadDto) {
     // Inject the logged-in user's ID to prevent manual user_id assignment
     const payload = { ...dto, user_id: userId };
 
@@ -31,7 +31,7 @@ export class PartnerService {
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
     }
 
-    return this.partnerRepository.create(validated.data as CreatePartnerDto);
+    return this.partnerRepository.create(validated.data as PartnerCreatePayloadDto);
   }
 
   async findById(id: string, user: UserPayload, includeDeleted: boolean = false) {
@@ -50,7 +50,7 @@ export class PartnerService {
     return partner;
   }
 
-  async findAll(user: UserPayload, query: FindAllPartnerDto) {
+  async findAll(user: UserPayload, query: PartnerQueryDto) {
     const validated = FindAllPartnerSchema.safeParse(query);
     if (!validated.success) {
       const firstIssue = validated.error.issues[0];
@@ -101,7 +101,7 @@ export class PartnerService {
     };
   }
 
-  async update(id: string, user: UserPayload, dto: UpdatePartnerDto) {
+  async update(id: string, user: UserPayload, dto: PartnerUpdatePayloadDto) {
     // Determine if partner exists and if the user has permission to update it
     await this.findById(id, user);
 
@@ -112,7 +112,7 @@ export class PartnerService {
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
     }
 
-    return this.partnerRepository.update(id, validated.data as UpdatePartnerDto);
+    return this.partnerRepository.update(id, validated.data as PartnerUpdatePayloadDto);
   }
 
   async delete(id: string, user: UserPayload) {
