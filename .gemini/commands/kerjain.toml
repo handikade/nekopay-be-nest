@@ -15,12 +15,13 @@ Please follow these steps strictly:
 3. **Strategize:** Break down the plan into actionable technical steps if it's not already detailed.
 4. **Execute:**
    - Implement the changes described in the plan.
-   - Follow the project's engineering standards (Standalone components, Signals, etc.).
+   - Follow the project's engineering standards (NestJS Modules, Controllers, Services, DTOs with Zod, Prisma, etc.).
    - Ensure all changes are surgical and idiomatic.
 5. **Verify & Cleanup:**
    - Run `pnpm run build` to ensure there are no compilation errors.
    - Run `pnpm run lint` and fix any linting errors that arise from your changes.
    - Run `pnpm run format` to ensure consistent code style.
+   - Run relevant tests (e.g., `pnpm run test` or `pnpm run test:e2e`) if the plan involves behavioral changes.
 
 # Context
 Project Root Structure:
