@@ -23,6 +23,7 @@ model User {
   created_at   DateTime  @default(now()) @db.Timestamptz
   updated_at   DateTime  @default(now()) @updatedAt @db.Timestamptz
   partners     Partner[]
+  invoices     Invoice[]
 
   @@map("users")
 }
@@ -42,8 +43,9 @@ model Tax {
   rate       Decimal  @db.Decimal(5, 4)
   type       TaxType
   name       String   @db.VarChar(100)
-  created_at DateTime @default(now()) @db.Timestamptz
-  updated_at DateTime @default(now()) @updatedAt @db.Timestamptz
+  created_at    DateTime      @default(now()) @db.Timestamptz
+  updated_at    DateTime      @default(now()) @updatedAt @db.Timestamptz
+  invoice_items InvoiceItem[]
 
   @@map("taxes")
 }
@@ -103,6 +105,7 @@ model Partner {
   deleted_at            DateTime?            @db.Timestamptz
   partner_bank_accounts PartnerBankAccount[]
   contacts              PartnerContact[]
+  invoices              Invoice[]
 
   @@map("partners")
 }
@@ -135,3 +138,71 @@ model PartnerBankAccount {
 }
 
 // #endregion PARTNER
+
+// #region INVOICE
+
+enum InvoiceType {
+  SALES
+  PURCHASE
+}
+
+enum InvoiceDocStatus {
+  DRAFT
+  POSTED
+  PAID
+  CANCELLED
+}
+
+enum InvoiceSentStatus {
+  SENT
+  NOT_SENT
+}
+
+model Invoice {
+  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  number          String            @db.VarChar(50)
+  type            InvoiceType       @default(SALES)
+  document_status InvoiceDocStatus  @default(DRAFT)
+  sent_status     InvoiceSentStatus @default(NOT_SENT)
+  issue_date      DateTime          @db.Date
+  due_date        DateTime?         @db.Date
+  currency        String            @default("IDR") @db.VarChar(3)
+  subtotal        Decimal           @default(0.00) @db.Decimal(12, 2)
+  total_tax       Decimal           @default(0.00) @db.Decimal(12, 2)
+  total_discount  Decimal           @default(0.00) @db.Decimal(12, 2)
+  grand_total     Decimal           @default(0.00) @db.Decimal(12, 2)
+  notes           String?           @db.Text
+  user_id         String            @db.Uuid
+  user            User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  partner_id      String            @db.Uuid
+  partner         Partner           @relation(fields: [partner_id], references: [id], onDelete: Restrict)
+  items           InvoiceItem[]
+  created_at      DateTime          @default(now()) @db.Timestamptz
+  updated_at      DateTime          @default(now()) @updatedAt @db.Timestamptz
+  deleted_at      DateTime?         @db.Timestamptz
+
+  @@unique([user_id, number])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  description     String   @db.VarChar(255)
+  quantity        Decimal  @default(1.00) @db.Decimal(8, 2)
+  unit_price      Decimal  @db.Decimal(12, 2)
+  discount_rate   Decimal? @default(0.00) @db.Decimal(5, 2)
+  discount_amount Decimal? @default(0.00) @db.Decimal(12, 2)
+  tax_id          String?  @db.Uuid
+  tax             Tax?     @relation(fields: [tax_id], references: [id], onDelete: SetNull)
+  tax_rate        Decimal? @default(0.00) @db.Decimal(5, 2)
+  tax_amount      Decimal? @default(0.00) @db.Decimal(12, 2)
+  line_total      Decimal  @db.Decimal(12, 2)
+  invoice_id      String   @db.Uuid
+  invoice         Invoice  @relation(fields: [invoice_id], references: [id], onDelete: Cascade)
+  created_at      DateTime @default(now()) @db.Timestamptz
+  updated_at      DateTime @default(now()) @updatedAt @db.Timestamptz
+
+  @@map("invoice_items")
+}
+
+// #endregion INVOICE
