@@ -38,11 +38,11 @@ enum TaxType {
 }
 
 model Tax {
-  id         String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  code       String   @unique @db.VarChar(50)
-  rate       Decimal  @db.Decimal(5, 4)
-  type       TaxType
-  name       String   @db.VarChar(100)
+  id            String        @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  code          String        @unique @db.VarChar(50)
+  rate          Decimal       @db.Decimal(5, 4)
+  type          TaxType
+  name          String        @db.VarChar(100)
   created_at    DateTime      @default(now()) @db.Timestamptz
   updated_at    DateTime      @default(now()) @updatedAt @db.Timestamptz
   invoice_items InvoiceItem[]
@@ -159,21 +159,21 @@ enum InvoiceSentStatus {
 }
 
 model Invoice {
-  id              String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
-  number          String            @db.VarChar(50)
-  type            InvoiceType       @default(SALES)
-  document_status InvoiceDocStatus  @default(DRAFT)
-  sent_status     InvoiceSentStatus @default(NOT_SENT)
-  issue_date      DateTime          @db.Date
-  due_date        DateTime?         @db.Date
-  currency        String            @default("IDR") @db.VarChar(3)
-  subtotal        Decimal           @default(0.00) @db.Decimal(12, 2)
-  total_tax       Decimal           @default(0.00) @db.Decimal(12, 2)
-  total_discount  Decimal           @default(0.00) @db.Decimal(12, 2)
-  grand_total     Decimal           @default(0.00) @db.Decimal(12, 2)
-  notes           String?           @db.Text
-  user_id         String            @db.Uuid
-  user            User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id                    String            @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  number                String            @db.VarChar(50)
+  type                  InvoiceType       @default(SALES)
+  document_status       InvoiceDocStatus  @default(DRAFT)
+  sent_status           InvoiceSentStatus @default(NOT_SENT)
+  issue_date            DateTime          @db.Date
+  due_date              DateTime?         @db.Date
+  currency              String            @default("IDR") @db.VarChar(3)
+  subtotal              Decimal           @default(0.00) @db.Decimal(12, 2)
+  total_tax             Decimal           @default(0.00) @db.Decimal(12, 2)
+  total_discount        Decimal           @default(0.00) @db.Decimal(12, 2)
+  grand_total           Decimal           @default(0.00) @db.Decimal(12, 2)
+  notes                 String?           @db.Text
+  user_id               String            @db.Uuid
+  user                  User              @relation(fields: [user_id], references: [id], onDelete: Cascade)
   partner_id            String            @db.Uuid
   partner               Partner           @relation(fields: [partner_id], references: [id], onDelete: Restrict)
   partner_name          String            @db.VarChar(255)
@@ -182,9 +182,9 @@ model Invoice {
   partner_address       String?           @db.VarChar(255)
   partner_snapshot_at   DateTime          @default(now()) @db.Timestamptz
   items                 InvoiceItem[]
-  created_at      DateTime          @default(now()) @db.Timestamptz
-  updated_at      DateTime          @default(now()) @updatedAt @db.Timestamptz
-  deleted_at      DateTime?         @db.Timestamptz
+  created_at            DateTime          @default(now()) @db.Timestamptz
+  updated_at            DateTime          @default(now()) @updatedAt @db.Timestamptz
+  deleted_at            DateTime?         @db.Timestamptz
 
   @@unique([user_id, number])
   @@map("invoices")
