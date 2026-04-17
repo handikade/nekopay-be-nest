@@ -30,6 +30,7 @@ export const PartnerAddressSchema = z.object({
 
 export const CreatePartnerSchema = z.object({
   user_id: z.uuid().describe('User ID the partner belongs to'),
+  number: z.string().optional().nullable().describe('Partner unique identification number'),
   name: z.string().min(1).describe('Partner company name'),
   types: z
     .array(z.enum(['SUPPLIER', 'BUYER']))

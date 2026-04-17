@@ -83,6 +83,7 @@ enum PartnerType {
 
 model Partner {
   id                    String               @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  number                String?              @unique @db.VarChar(50)
   name                  String               @db.VarChar(255)
   types                 PartnerType[]
   legal_entity          PartnerEntity

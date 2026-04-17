@@ -69,6 +69,7 @@ export const PartnerBankAccountSchema = z.object({
  */
 export const PartnerBaseSchema = z.object({
   id: z.uuid().describe('Partner ID'),
+  number: z.string().optional().nullable().describe('Partner unique identification number'),
   name: z.string().describe('Partner company name'),
   types: z.array(z.enum(['SUPPLIER', 'BUYER'])).describe('Partner types'),
   legal_entity: z.enum(['CV', 'PT', 'KOPERASI', 'INDIVIDUAL']).describe('Legal entity type'),
