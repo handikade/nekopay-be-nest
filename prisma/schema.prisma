@@ -201,6 +201,7 @@ model InvoiceItem {
   tax_id          String?  @db.Uuid
   tax             Tax?     @relation(fields: [tax_id], references: [id], onDelete: SetNull)
   tax_rate        Decimal? @default(0.00) @db.Decimal(5, 2)
+  tax_type        TaxType  @default(EXCLUSIVE)
   tax_amount      Decimal? @default(0.00) @db.Decimal(12, 2)
   line_total      Decimal  @db.Decimal(12, 2)
   invoice_id      String   @db.Uuid
