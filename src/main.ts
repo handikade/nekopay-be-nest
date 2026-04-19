@@ -39,6 +39,7 @@ async function bootstrap() {
     '/api',
     apiReference({
       theme: 'default',
+      pageTitle: 'Nekopay API Reference',
       content: documentFactory(),
     }),
   );
