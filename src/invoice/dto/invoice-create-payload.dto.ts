@@ -23,9 +23,14 @@ export const InvoiceCreateSchema = z.object({
   notes: z.string().optional().nullable().describe('Additional notes'),
   user_id: z.uuid().describe('User ID'),
   partner_id: z.uuid().describe('Partner ID'),
-  partner_name: z.string().min(1).max(255).describe('Snapshot of partner name'),
-  partner_company_email: z.string().email().max(255).describe('Snapshot of partner email'),
-  partner_company_phone: z.string().min(1).max(20).describe('Snapshot of partner phone'),
+  partner_name: z.string().min(1).max(255).optional().describe('Snapshot of partner name'),
+  partner_company_email: z
+    .string()
+    .email()
+    .max(255)
+    .optional()
+    .describe('Snapshot of partner email'),
+  partner_company_phone: z.string().min(1).max(20).optional().describe('Snapshot of partner phone'),
   partner_address: z
     .string()
     .max(255)

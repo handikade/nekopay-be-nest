@@ -13,6 +13,9 @@ export class InvoiceRepository {
     return this.prisma.invoice.create({
       data: {
         ...invoiceData,
+        partner_name: invoiceData.partner_name!,
+        partner_company_email: invoiceData.partner_company_email!,
+        partner_company_phone: invoiceData.partner_company_phone!,
         items: {
           create: items,
         },
