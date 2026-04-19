@@ -11,6 +11,13 @@ export interface AppResponse<T = unknown> {
   statusCode: number;
   message: string;
   data: T;
+  meta?: {
+    total?: number;
+    page?: number;
+    limit?: number;
+    totalPages?: number;
+    [key: string]: unknown;
+  };
 }
 
 export async function createE2EApp(): Promise<INestApplication> {

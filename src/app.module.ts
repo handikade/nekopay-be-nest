@@ -8,6 +8,7 @@ import { InvoiceModule } from './invoice/invoice.module';
 import { PartnerModule } from './partner/partner.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RegionModule } from './region/region.module';
+import { TaxModule } from './tax/tax.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { RegionModule } from './region/region.module';
     BankModule,
     RegionModule,
     InvoiceModule,
+    TaxModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -5,12 +5,22 @@ import { z } from 'zod';
  * Base response schema for fields shared by all responses.
  */
 const BaseResponseSchema = z.object({
-  statusCode: z.number().int().describe('HTTP status code'),
-  message: z.string().min(1).describe('Response message'),
+  statusCode: z.number().int().describe('HTTP status code. Example: 200'),
+  message: z.string().min(1).describe('Response message. Example: Success'),
   meta: z
     .record(z.string(), z.unknown())
     .optional()
     .describe('Optional metadata (e.g., pagination)'),
+});
+
+/**
+ * Schema for pagination metadata.
+ */
+export const PaginationMetaSchema = z.object({
+  total: z.number().int().min(0).describe('Total number of records'),
+  page: z.number().int().min(1).describe('Current page number'),
+  limit: z.number().int().min(1).describe('Number of records per page'),
+  totalPages: z.number().int().min(0).describe('Total number of pages'),
 });
 
 /**
@@ -27,7 +37,20 @@ export type Response<T> = z.infer<typeof BaseResponseSchema> & {
  */
 export const makeResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   BaseResponseSchema.extend({
+    statusCode: z.literal(200).describe('HTTP status code'),
+    message: z.literal('Success').describe('Response message'),
     data: dataSchema,
+  });
+
+/**
+ * Factory to create a Zod schema for a paginated response.
+ */
+export const makePaginatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  BaseResponseSchema.extend({
+    statusCode: z.literal(200).describe('HTTP status code'),
+    message: z.literal('Success').describe('Response message'),
+    data: dataSchema,
+    meta: PaginationMetaSchema,
   });
 
 /**
