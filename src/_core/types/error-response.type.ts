@@ -62,3 +62,11 @@ export class InternalServerErrorResponseDto extends makeErrorResponseDto(
     error: 'Internal Server Error',
   }),
 ) {}
+
+export class ConflictResponseDto extends makeErrorResponseDto(
+  makeErrorResponseSchema({
+    statusCode: 409,
+    message: 'Conflict',
+    error: 'Conflict',
+  }),
+) {}
