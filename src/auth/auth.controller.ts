@@ -9,7 +9,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { InternalServerErrorResponseDto } from '../_core/types/error-response.type';
 import { AuthService } from './auth.service';
+import {
+  LoginConflictResponseDto,
+  LoginSuccessResponseDto,
+  RegisterConflictResponseDto,
+  RegisterSuccessResponseDto,
+} from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { JwtAuthGuard } from './jwt-auth.guard';
@@ -33,21 +40,17 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'User successfully registered',
-    schema: {
-      example: {
-        message: 'User registered successfully',
-      },
-    },
+    type: RegisterSuccessResponseDto,
   })
   @ApiResponse({
     status: 500,
     description: 'Internal server error',
-    schema: {
-      example: {
-        statusCode: 500,
-        message: 'Internal server error',
-      },
-    },
+    type: InternalServerErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 409,
+    description: 'Conflict: Email or username already exists',
+    type: RegisterConflictResponseDto,
   })
   @ApiResponse({
     status: 400,
@@ -71,23 +74,12 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'Login successful, returns access token',
-    schema: {
-      example: {
-        accessToken:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJkNWRmNTU0ZC00NDI1LTRjYzQtODMzMy01ZTA1N2NjYTkxMzUiLCJ1c2VybmFtZSI6IkRpa2EiLCJpYXQiOjE3NzUzNzIwMzUsImV4cCI6MTc3NTM3MjkzNX0.o0h16bkHsfgFKNOo-aJPxIgd5eJWYFIe9DA7ohPko8o',
-      },
-    },
+    type: LoginSuccessResponseDto,
   })
   @ApiResponse({
     status: 409,
     description: 'Invalid credentials',
-    schema: {
-      example: {
-        message: 'Invalid credentials',
-        error: 'Conflict',
-        statusCode: 409,
-      },
-    },
+    type: LoginConflictResponseDto,
   })
   @ApiResponse({
     status: 400,
