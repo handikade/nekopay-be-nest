@@ -43,6 +43,16 @@ export const makeResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   });
 
 /**
+ * Factory to create a Zod schema for a created response (201).
+ */
+export const makeCreatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
+  BaseResponseSchema.extend({
+    statusCode: z.literal(201).describe('HTTP status code'),
+    message: z.literal('Success').describe('Response message'),
+    data: dataSchema,
+  });
+
+/**
  * Factory to create a Zod schema for a paginated response.
  */
 export const makePaginatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
