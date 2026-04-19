@@ -12,11 +12,16 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
+import { ErrorResponseDto, UnauthorizedResponseDto } from '../_core/types/error-response.type';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PartnerCreatePayloadDto } from './dto/partner-create-payload.dto';
 import { PartnerQueryDto } from './dto/partner-query.dto';
 import { PartnerUpdatePayloadDto } from './dto/partner-update-payload.dto';
-import { PartnerListResponseDto, PartnerSingleResponseDto } from './dto/partner.dto';
+import {
+  PartnerCreateSingleResponseDto,
+  PartnerListResponseDto,
+  PartnerSingleResponseDto,
+} from './dto/partner.dto';
 import { PartnerService } from './partner.service';
 
 interface AuthenticatedRequest extends Request {
@@ -37,18 +42,21 @@ export class PartnerController {
   @ApiResponse({
     status: 201,
     description: 'Partner successfully created',
-    type: PartnerSingleResponseDto,
+    type: PartnerCreateSingleResponseDto,
   })
   @ApiResponse({
     status: 400,
     description: 'Bad request (validation error)',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized',
+    type: UnauthorizedResponseDto,
   })
   async create(@Req() req: AuthenticatedRequest, @Body() dto: PartnerCreatePayloadDto) {
-    return this.partnerService.create(req.user.id, dto);
+    const result = await this.partnerService.create(req.user.id, dto);
+    return { id: result.id };
   }
 
   /**

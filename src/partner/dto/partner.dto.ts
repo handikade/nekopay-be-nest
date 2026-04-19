@@ -1,6 +1,10 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
-import { makeResponseDto, makeResponseSchema } from '../../_core/types/response.type';
+import {
+  makeCreatedResponseSchema,
+  makeResponseDto,
+  makeResponseSchema,
+} from '../../_core/types/response.type';
 import { PartnerAddressSchema } from './partner-create-payload.dto';
 
 /**
@@ -130,17 +134,29 @@ export const PartnerAdminResponseSchema = PartnerBaseSchema.extend({
   }).describe('Associated user summary'),
 });
 
+/**
+ * Schema for partner creation response (ID only).
+ */
+export const PartnerCreateResponseSchema = z.object({
+  id: z.string().uuid().describe('Created partner ID'),
+});
+
 // --- DTO Classes ---
 
 export class PartnerDto extends createZodDto(PartnerSchema) {}
 export class PartnerFullDto extends createZodDto(PartnerFullSchema) {}
 export class PartnerResponseDto extends createZodDto(PartnerResponseSchema) {}
 export class PartnerAdminResponseDto extends createZodDto(PartnerAdminResponseSchema) {}
+export class PartnerCreateResponseDto extends createZodDto(PartnerCreateResponseSchema) {}
 
 // --- Wrapped Response DTOs for Swagger ---
 
 export class PartnerSingleResponseDto extends makeResponseDto(
   makeResponseSchema(PartnerFullSchema),
+) {}
+
+export class PartnerCreateSingleResponseDto extends makeResponseDto(
+  makeCreatedResponseSchema(PartnerCreateResponseSchema),
 ) {}
 
 export class PartnerListResponseDto extends makeResponseDto(
