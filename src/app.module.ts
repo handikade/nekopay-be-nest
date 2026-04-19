@@ -4,12 +4,21 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { BankModule } from './bank/bank.module';
 import { HealthModule } from './health/health.module';
+import { InvoiceModule } from './invoice/invoice.module';
 import { PartnerModule } from './partner/partner.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RegionModule } from './region/region.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, HealthModule, PartnerModule, BankModule, RegionModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    HealthModule,
+    PartnerModule,
+    BankModule,
+    RegionModule,
+    InvoiceModule,
+  ],
   controllers: [AppController],
   providers: [AppService],
 })
