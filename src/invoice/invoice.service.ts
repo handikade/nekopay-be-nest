@@ -1,9 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Invoice } from '@prisma/client';
 import { calculateTaxAmount } from '../_core/utils/calculate-tax.util';
 import { PartnerRepository } from '../partner/partner.repository';
 import { TaxRepository } from '../tax/tax.repository';
 import { InvoiceCreatePayloadDto } from './dto/invoice-create-payload.dto';
+import { InvoiceItemCreatePayloadDto } from './dto/invoice-item-create-payload.dto';
+import { InvoiceUpdatePayloadDto } from './dto/invoice-update-payload.dto';
 import { InvoiceRepository } from './invoice.repository';
 
 @Injectable()
@@ -31,12 +33,60 @@ export class InvoiceService {
       partner_address: partner.address,
     };
 
+    const calculatedData = await this.calculateInvoiceTotals(data.items);
+
+    return this.invoiceRepository.create({
+      ...data,
+      ...snapshotData,
+      ...calculatedData,
+    });
+  }
+
+  async update(id: string, user_id: string, data: InvoiceUpdatePayloadDto): Promise<Invoice> {
+    const existingInvoice = await this.invoiceRepository.findById(id);
+
+    if (!existingInvoice || existingInvoice.user_id !== user_id) {
+      throw new NotFoundException(`Invoice with ID ${id} not found`);
+    }
+
+    if (existingInvoice.document_status !== 'DRAFT') {
+      throw new BadRequestException(`Only DRAFT invoices can be updated`);
+    }
+
+    let snapshotData = {};
+    if (data.partner_id) {
+      const partner = await this.partnerRepository.findById(data.partner_id);
+      if (!partner || partner.user_id !== user_id) {
+        throw new NotFoundException(`Partner with ID ${data.partner_id} not found`);
+      }
+
+      snapshotData = {
+        partner_name: partner.name,
+        partner_company_email: partner.company_email,
+        partner_company_phone: partner.company_phone,
+        partner_address: partner.address,
+      };
+    }
+
+    let calculatedData = {};
+    if (data.items) {
+      calculatedData = await this.calculateInvoiceTotals(data.items);
+    }
+
+    return this.invoiceRepository.update(id, {
+      ...data,
+      ...snapshotData,
+      ...calculatedData,
+    });
+  }
+
+  private async calculateInvoiceTotals(items: InvoiceItemCreatePayloadDto[]) {
     let subtotal = 0;
     let totalTax = 0;
     let totalDiscount = 0;
 
     const calculatedItems = await Promise.all(
-      data.items.map(async (item) => {
+      items.map(async (item) => {
         const itemSubtotal = item.quantity * item.unit_price;
         subtotal += itemSubtotal;
 
@@ -51,13 +101,13 @@ export class InvoiceService {
         const baseAmount = itemSubtotal - discountAmount;
 
         let taxRate = item.tax_rate || 0;
-        let taxType = item.tax_type || 'EXCLUSIVE';
+        let taxType: 'INCLUSIVE' | 'EXCLUSIVE' = item.tax_type || 'EXCLUSIVE';
 
         if (item.tax_id) {
           const tax = await this.taxRepository.findById(item.tax_id);
           if (tax) {
             taxRate = Number(tax.rate);
-            taxType = tax.type;
+            taxType = tax.type as 'INCLUSIVE' | 'EXCLUSIVE';
           }
         }
 
@@ -88,19 +138,12 @@ export class InvoiceService {
         return item.tax_type === 'EXCLUSIVE' ? acc + (item.tax_amount || 0) : acc;
       }, 0);
 
-    // Re-calculating grand total correctly based on inclusive/exclusive logic
-    // Actually, subtotal is sum of unit_price * quantity.
-    // grandTotal = subtotal - totalDiscount + (sum of exclusive taxes)
-    // If tax is inclusive, it's already in the baseAmount (which is part of subtotal).
-
-    return this.invoiceRepository.create({
-      ...data,
-      ...snapshotData,
+    return {
+      items: calculatedItems,
       subtotal,
       total_tax: totalTax,
       total_discount: totalDiscount,
       grand_total: grandTotal,
-      items: calculatedItems,
-    });
+    };
   }
 }

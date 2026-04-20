@@ -1,24 +1,40 @@
-import { NotFoundException } from '@nestjs/common';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { Tax } from '@prisma/client';
+import { Invoice, Tax } from '@prisma/client';
 import { PartnerRepository } from '../partner/partner.repository';
 import { TaxRepository } from '../tax/tax.repository';
 import { InvoiceCreatePayloadDto } from './dto/invoice-create-payload.dto';
 import { InvoiceRepository } from './invoice.repository';
 import { InvoiceService } from './invoice.service';
 
+type MockInvoiceRepository = {
+  create: jest.Mock;
+  findById: jest.Mock;
+  update: jest.Mock;
+};
+
+type MockPartnerRepository = {
+  findById: jest.Mock;
+};
+
+type MockTaxRepository = {
+  findById: jest.Mock;
+};
+
 describe('InvoiceService', () => {
   let service: InvoiceService;
 
-  const mockInvoiceRepository = {
+  const mockInvoiceRepository: MockInvoiceRepository = {
     create: jest.fn(),
+    findById: jest.fn(),
+    update: jest.fn(),
   };
 
-  const mockPartnerRepository = {
+  const mockPartnerRepository: MockPartnerRepository = {
     findById: jest.fn(),
   };
 
-  const mockTaxRepository = {
+  const mockTaxRepository: MockTaxRepository = {
     findById: jest.fn(),
   };
 
@@ -36,6 +52,13 @@ describe('InvoiceService', () => {
     rate: '0.11',
     type: 'EXCLUSIVE',
   } as unknown as Tax;
+
+  const mockInvoice = {
+    id: 'invoice-id-123',
+    user_id: 'user-id-123',
+    document_status: 'DRAFT',
+    items: [],
+  };
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -86,7 +109,9 @@ describe('InvoiceService', () => {
 
       mockPartnerRepository.findById.mockResolvedValue(mockPartner);
       mockTaxRepository.findById.mockResolvedValue(mockTax);
-      mockInvoiceRepository.create.mockImplementation((data: InvoiceCreatePayloadDto) => data);
+      mockInvoiceRepository.create.mockImplementation((data: InvoiceCreatePayloadDto) =>
+        Promise.resolve(data as unknown as Invoice),
+      );
 
       const result = (await service.create(dto)) as unknown as InvoiceCreatePayloadDto;
 
@@ -133,7 +158,9 @@ describe('InvoiceService', () => {
         rate: '0.11',
         type: 'INCLUSIVE',
       } as unknown as Tax);
-      mockInvoiceRepository.create.mockImplementation((data: InvoiceCreatePayloadDto) => data);
+      mockInvoiceRepository.create.mockImplementation((data: InvoiceCreatePayloadDto) =>
+        Promise.resolve(data as unknown as Invoice),
+      );
 
       const result = (await service.create(dto)) as unknown as InvoiceCreatePayloadDto;
 
@@ -148,6 +175,59 @@ describe('InvoiceService', () => {
       const dto = { partner_id: 'invalid-id' } as unknown as InvoiceCreatePayloadDto;
 
       await expect(service.create(dto)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('update', () => {
+    it('should successfully update an invoice', async () => {
+      const dto = {
+        number: 'INV-UPDATED',
+        items: [
+          {
+            description: 'Updated Item',
+            quantity: 1,
+            unit_price: 100000,
+            line_total: 0,
+          },
+        ],
+      };
+
+      mockInvoiceRepository.findById.mockResolvedValue(mockInvoice);
+      mockInvoiceRepository.update.mockImplementation((id: string, data: any) =>
+        Promise.resolve({ id, ...data } as unknown as Invoice),
+      );
+      mockTaxRepository.findById.mockResolvedValue(mockTax);
+
+      const result = (await service.update('invoice-id-123', 'user-id-123', dto)) as Invoice & {
+        subtotal: number;
+      };
+
+      expect(mockInvoiceRepository.findById).toHaveBeenCalledWith('invoice-id-123');
+      expect(mockInvoiceRepository.update).toHaveBeenCalled();
+      expect(result.number).toBe('INV-UPDATED');
+      expect(result.subtotal).toBe(100000);
+    });
+
+    it('should throw NotFoundException if invoice not found', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue(null);
+      await expect(service.update('invalid-id', 'user-id', {})).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if user is not the owner', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue(mockInvoice);
+      await expect(service.update('invoice-id-123', 'other-user', {})).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should throw BadRequestException if invoice is not in DRAFT status', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue({
+        ...mockInvoice,
+        document_status: 'POSTED',
+      });
+      await expect(service.update('invoice-id-123', 'user-id-123', {})).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

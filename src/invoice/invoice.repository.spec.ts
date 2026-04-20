@@ -4,6 +4,18 @@ import { PrismaService } from '../prisma/prisma.service';
 import { InvoiceCreatePayloadDto } from './dto/invoice-create-payload.dto';
 import { InvoiceRepository } from './invoice.repository';
 
+type MockPrismaService = {
+  invoice: {
+    create: jest.Mock;
+    findUnique: jest.Mock;
+    update: jest.Mock;
+  };
+  invoiceItem: {
+    deleteMany: jest.Mock;
+  };
+  $transaction: jest.Mock;
+};
+
 describe('InvoiceRepository', () => {
   let repository: InvoiceRepository;
 
@@ -29,10 +41,16 @@ describe('InvoiceRepository', () => {
     partner_address: 'Partner Address',
   };
 
-  const mockPrismaService = {
+  const mockPrismaService: MockPrismaService = {
     invoice: {
       create: jest.fn(),
+      findUnique: jest.fn(),
+      update: jest.fn(),
     },
+    invoiceItem: {
+      deleteMany: jest.fn(),
+    },
+    $transaction: jest.fn((callback: (tx: any) => Promise<any>) => callback(mockPrismaService)),
   };
 
   beforeEach(async () => {
@@ -116,6 +134,45 @@ describe('InvoiceRepository', () => {
         ...mockInvoice,
         items: dto.items,
       });
+    });
+  });
+
+  describe('findById', () => {
+    it('should find an invoice by id', async () => {
+      mockPrismaService.invoice.findUnique.mockResolvedValue(mockInvoice);
+      const result = await repository.findById('invoice-id-123');
+      expect(mockPrismaService.invoice.findUnique).toHaveBeenCalledWith({
+        where: { id: 'invoice-id-123' },
+        include: { items: true },
+      });
+      expect(result).toEqual(mockInvoice);
+    });
+  });
+
+  describe('update', () => {
+    it('should successfully update an invoice and its items', async () => {
+      const data = {
+        number: 'INV-UPDATED',
+        items: [{ description: 'New Item', quantity: 1, unit_price: 50000 }],
+      };
+
+      mockPrismaService.invoice.update.mockResolvedValue({ ...mockInvoice, ...data });
+
+      const result = await repository.update('invoice-id-123', data);
+
+      expect(mockPrismaService.$transaction).toHaveBeenCalled();
+      expect(mockPrismaService.invoiceItem.deleteMany).toHaveBeenCalledWith({
+        where: { invoice_id: 'invoice-id-123' },
+      });
+      expect(mockPrismaService.invoice.update).toHaveBeenCalledWith({
+        where: { id: 'invoice-id-123' },
+        data: {
+          number: 'INV-UPDATED',
+          items: { create: data.items },
+        },
+        include: { items: true },
+      });
+      expect(result.number).toBe('INV-UPDATED');
     });
   });
 });

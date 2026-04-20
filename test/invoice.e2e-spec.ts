@@ -126,4 +126,70 @@ describe('InvoiceController (e2e)', () => {
       .send(payload)
       .expect(404);
   });
+
+  describe('/invoices/:id (PATCH)', () => {
+    let invoiceId: string;
+    let partnerId: string;
+
+    beforeEach(async () => {
+      const partner = await createPartner(accessToken);
+      partnerId = partner.id;
+
+      const res = await request(app.getHttpServer() as string)
+        .post('/invoices')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          number: `INV-UPDATE-${Date.now()}`,
+          issue_date: new Date().toISOString(),
+          partner_id: partnerId,
+          items: [
+            {
+              description: 'Initial Item',
+              quantity: 1,
+              unit_price: 100000,
+            },
+          ],
+        });
+      invoiceId = (res.body as AppResponse<InvoiceResponse>).data.id;
+    });
+
+    it('should update invoice successfully', async () => {
+      const updatePayload = {
+        number: `INV-UPDATED-${Date.now()}`,
+        items: [
+          {
+            description: 'Updated Item',
+            quantity: 3,
+            unit_price: 50000,
+          },
+        ],
+      };
+
+      const res = await request(app.getHttpServer() as string)
+        .patch(`/invoices/${invoiceId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send(updatePayload)
+        .expect(200);
+
+      const body = res.body as AppResponse<InvoiceResponse>;
+      expect(body.data.subtotal).toBe('150000');
+    });
+
+    it('should return 404 when updating other user invoice', async () => {
+      await request(app.getHttpServer() as string)
+        .patch(`/invoices/${invoiceId}`)
+        .set('Authorization', `Bearer ${otherAccessToken}`)
+        .send({ number: 'NEW-NUMBER' })
+        .expect(404);
+    });
+
+    it('should return 404 for non-existent invoice', async () => {
+      const fakeId = '00000000-0000-0000-0000-000000000000';
+      await request(app.getHttpServer() as string)
+        .patch(`/invoices/${fakeId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({ number: 'NEW-NUMBER' })
+        .expect(404);
+    });
+  });
 });
