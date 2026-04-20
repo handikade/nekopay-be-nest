@@ -42,12 +42,18 @@ export class InvoiceService {
     });
   }
 
-  async update(id: string, user_id: string, data: InvoiceUpdatePayloadDto): Promise<Invoice> {
-    const existingInvoice = await this.invoiceRepository.findById(id);
+  async findById(id: string, userId: string) {
+    const invoice = await this.invoiceRepository.findById(id);
 
-    if (!existingInvoice || existingInvoice.user_id !== user_id) {
+    if (!invoice || invoice.user_id !== userId) {
       throw new NotFoundException(`Invoice with ID ${id} not found`);
     }
+
+    return invoice;
+  }
+
+  async update(id: string, user_id: string, data: InvoiceUpdatePayloadDto): Promise<Invoice> {
+    const existingInvoice = await this.findById(id, user_id);
 
     if (existingInvoice.document_status !== 'DRAFT') {
       throw new BadRequestException(`Only DRAFT invoices can be updated`);

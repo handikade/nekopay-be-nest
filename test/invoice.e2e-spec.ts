@@ -127,6 +127,54 @@ describe('InvoiceController (e2e)', () => {
       .expect(404);
   });
 
+  describe('/invoices/:id (GET)', () => {
+    let invoiceId: string;
+
+    beforeEach(async () => {
+      const partner = await createPartner(accessToken);
+      const res = await request(app.getHttpServer() as string)
+        .post('/invoices')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          number: `INV-GET-${Date.now()}`,
+          issue_date: new Date().toISOString(),
+          partner_id: partner.id,
+          items: [
+            {
+              description: 'Item 1',
+              quantity: 1,
+              unit_price: 100000,
+            },
+          ],
+        });
+      invoiceId = (res.body as AppResponse<InvoiceResponse>).data.id;
+    });
+
+    it('should retrieve invoice successfully', async () => {
+      const res = await request(app.getHttpServer() as string)
+        .get(`/invoices/${invoiceId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      const body = res.body as AppResponse<InvoiceResponse>;
+      expect(body.data.id).toBe(invoiceId);
+      expect(body.data.items).toHaveLength(1);
+    });
+
+    it('should return 401 when unauthenticated', async () => {
+      await request(app.getHttpServer() as string)
+        .get(`/invoices/${invoiceId}`)
+        .expect(401);
+    });
+
+    it('should return 404 when retrieving other user invoice', async () => {
+      await request(app.getHttpServer() as string)
+        .get(`/invoices/${invoiceId}`)
+        .set('Authorization', `Bearer ${otherAccessToken}`)
+        .expect(404);
+    });
+  });
+
   describe('/invoices/:id (PATCH)', () => {
     let invoiceId: string;
     let partnerId: string;

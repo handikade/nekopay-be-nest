@@ -1,4 +1,4 @@
-import { Body, Controller, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import {
@@ -10,6 +10,7 @@ import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { InvoiceCreatePayloadDto } from './dto/invoice-create-payload.dto';
 import { InvoiceCreateResponseDto } from './dto/invoice-create-response.dto';
 import { InvoiceUpdatePayloadDto } from './dto/invoice-update-payload.dto';
+import { InvoiceSingleResponseDto } from './dto/invoice.dto';
 import { InvoiceService } from './invoice.service';
 
 export interface AuthenticatedRequest extends Request {
@@ -51,6 +52,34 @@ export class InvoiceController {
     // Inject user_id from the authenticated request to ensure ownership
     dto.user_id = req.user.id;
     return this.invoiceService.create(dto);
+  }
+
+  /**
+   * Get an invoice by ID
+   */
+  @Get(':id')
+  @ApiResponse({
+    status: 200,
+    description: 'Invoice successfully retrieved',
+    type: InvoiceSingleResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Invoice not found',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    type: InternalServerErrorResponseDto,
+  })
+  async findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.invoiceService.findById(id, req.user.id);
   }
 
   /**

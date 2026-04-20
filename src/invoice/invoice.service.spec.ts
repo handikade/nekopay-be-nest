@@ -178,6 +178,29 @@ describe('InvoiceService', () => {
     });
   });
 
+  describe('findById', () => {
+    it('should successfully retrieve an invoice', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue(mockInvoice);
+
+      const result = await service.findById('invoice-id-123', 'user-id-123');
+
+      expect(mockInvoiceRepository.findById).toHaveBeenCalledWith('invoice-id-123');
+      expect(result).toEqual(mockInvoice);
+    });
+
+    it('should throw NotFoundException if invoice not found', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue(null);
+      await expect(service.findById('invalid-id', 'user-id')).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw NotFoundException if user is not the owner', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue(mockInvoice);
+      await expect(service.findById('invoice-id-123', 'other-user')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
   describe('update', () => {
     it('should successfully update an invoice', async () => {
       const dto = {
