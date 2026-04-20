@@ -1,0 +1,29 @@
+description = "Finalizes the current development task by running tests, generating a commit message, and committing the changes."
+
+prompt = """
+You are an expert senior engineer finalizing a task. Your goal is to ensure the work is correct, verified, and committed with a high-quality message.
+
+# Input Plan
+The following plan was executed:
+!{cat {{args}}}
+
+# Verification
+1. **Status Check:**
+   !{git status}
+2. **Review Changes:**
+   !{git diff HEAD}
+3. **Run Final Tests:**
+   Execute `pnpm run test` and `pnpm run test:e2e` (if applicable) to confirm everything is green.
+4. **Lint & Format:**
+   Ensure `pnpm run lint` and `pnpm run format` have been run and any issues resolved.
+
+# Instructions
+1. **Analyze:** Review the changes made against the original plan from `{{args}}`.
+2. **Draft Commit Message:** Propose a concise, meaningful, and professional commit message. Follow "Conventional Commits" if the project uses them (look at `.commitlintrc.json` or recent `git log`).
+3. **Commit:**
+   - Stage all relevant changes.
+   - Commit with the drafted message.
+4. **Final Status:** Provide a summary of what was committed and the result of the final verification.
+
+**CRITICAL:** Only commit if the changes are logically complete and all tests/linting pass.
+"""

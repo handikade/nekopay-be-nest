@@ -9,11 +9,15 @@ You are an expert software architect. Your mission is to refine and \"tidy up\" 
 # Context for Refinement
 !{ls -F}
 
+# Database Schema
+!{cat prisma/schema.prisma}
+
 # Instructions
 1. **Analyze:** Carefully read the original plan.
 2. **Research:** Briefly explore the codebase to ensure that any DTO names, endpoint paths, database schemas, or architectural assumptions in the plan are correct and follow NestJS project conventions (Modules, Services, Zod DTOs, Prisma, etc.).
 3. **Refine:** Rewrite the plan to be more precise, detailed, and actionable for a senior developer or another AI agent.
    - Use a clear structure (e.g., Objectives, Prerequisites, Database Changes, API Implementation, Validation Steps).
+   - **Checklist Mode:** Represent all actionable technical steps as Markdown checkboxes (`- [ ]`).
    - Be explicit about file paths and symbol names.
    - Add verification steps for each part of the implementation (unit tests, e2e tests, swagger checks).
 4. **Action:** Use the `write_file` tool to overwrite the original plan file at `{{args}}` with your refined version.

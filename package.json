@@ -25,7 +25,8 @@
     "prepare": "husky",
     "commit": "cz",
     "db:diff": "prisma migrate diff --from-config-datasource --to-schema prisma/schema.prisma --script",
-    "db:migrate:status": "prisma migrate status"
+    "db:migrate:status": "prisma migrate status",
+    "plan:new": "node __plan/makePlanFile.js --name"
   },
   "dependencies": {
     "@nestjs/axios": "^4.0.1",
