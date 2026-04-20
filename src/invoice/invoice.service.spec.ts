@@ -11,6 +11,8 @@ type MockInvoiceRepository = {
   create: jest.Mock;
   findById: jest.Mock;
   update: jest.Mock;
+  softDelete: jest.Mock;
+  updateStatus: jest.Mock;
 };
 
 type MockPartnerRepository = {
@@ -28,6 +30,8 @@ describe('InvoiceService', () => {
     create: jest.fn(),
     findById: jest.fn(),
     update: jest.fn(),
+    softDelete: jest.fn(),
+    updateStatus: jest.fn(),
   };
 
   const mockPartnerRepository: MockPartnerRepository = {
@@ -216,7 +220,7 @@ describe('InvoiceService', () => {
       };
 
       mockInvoiceRepository.findById.mockResolvedValue(mockInvoice);
-      mockInvoiceRepository.update.mockImplementation((id: string, data: any) =>
+      mockInvoiceRepository.update.mockImplementation((id: string, data: unknown) =>
         Promise.resolve({ id, ...data } as unknown as Invoice),
       );
       mockTaxRepository.findById.mockResolvedValue(mockTax);
@@ -250,6 +254,106 @@ describe('InvoiceService', () => {
       });
       await expect(service.update('invoice-id-123', 'user-id-123', {})).rejects.toThrow(
         BadRequestException,
+      );
+    });
+  });
+
+  describe('remove', () => {
+    it('should successfully soft delete a DRAFT invoice', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue(mockInvoice);
+      mockInvoiceRepository.softDelete.mockResolvedValue({
+        ...mockInvoice,
+        deleted_at: new Date(),
+      });
+
+      const result = await service.remove('invoice-id-123', 'user-id-123');
+
+      expect(mockInvoiceRepository.findById).toHaveBeenCalledWith('invoice-id-123');
+      expect(mockInvoiceRepository.softDelete).toHaveBeenCalledWith('invoice-id-123');
+      expect(result).toBeDefined();
+    });
+
+    it('should throw BadRequestException if invoice is not in DRAFT status', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue({
+        ...mockInvoice,
+        document_status: 'POSTED',
+      });
+
+      await expect(service.remove('invoice-id-123', 'user-id-123')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should throw NotFoundException if user is not the owner', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue(mockInvoice);
+      await expect(service.remove('invoice-id-123', 'other-user')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('cancel', () => {
+    it('should successfully cancel a POSTED invoice', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue({
+        ...mockInvoice,
+        document_status: 'POSTED',
+      });
+      mockInvoiceRepository.updateStatus.mockResolvedValue({
+        ...mockInvoice,
+        document_status: 'CANCELLED',
+      });
+
+      const result = await service.cancel('invoice-id-123', 'user-id-123');
+
+      expect(mockInvoiceRepository.findById).toHaveBeenCalledWith('invoice-id-123');
+      expect(mockInvoiceRepository.updateStatus).toHaveBeenCalledWith(
+        'invoice-id-123',
+        'CANCELLED',
+      );
+      expect(result.document_status).toBe('CANCELLED');
+    });
+
+    it('should successfully cancel a PAID invoice', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue({
+        ...mockInvoice,
+        document_status: 'PAID',
+      });
+      mockInvoiceRepository.updateStatus.mockResolvedValue({
+        ...mockInvoice,
+        document_status: 'CANCELLED',
+      });
+
+      const result = await service.cancel('invoice-id-123', 'user-id-123');
+
+      expect(result.document_status).toBe('CANCELLED');
+    });
+
+    it('should throw BadRequestException if invoice is in DRAFT status', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue(mockInvoice);
+
+      await expect(service.cancel('invoice-id-123', 'user-id-123')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should throw BadRequestException if invoice is already CANCELLED', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue({
+        ...mockInvoice,
+        document_status: 'CANCELLED',
+      });
+
+      await expect(service.cancel('invoice-id-123', 'user-id-123')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    it('should throw NotFoundException if user is not the owner', async () => {
+      mockInvoiceRepository.findById.mockResolvedValue({
+        ...mockInvoice,
+        document_status: 'POSTED',
+      });
+      await expect(service.cancel('invoice-id-123', 'other-user')).rejects.toThrow(
+        NotFoundException,
       );
     });
   });

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
 import {
@@ -117,5 +117,71 @@ export class InvoiceController {
     @Body() dto: InvoiceUpdatePayloadDto,
   ) {
     return this.invoiceService.update(id, req.user.id, dto);
+  }
+
+  /**
+   * Delete an invoice
+   */
+  @Delete(':id')
+  @ApiResponse({
+    status: 200,
+    description: 'Invoice successfully deleted',
+    type: InvoiceSingleResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request (not DRAFT)',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Invoice not found',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    type: InternalServerErrorResponseDto,
+  })
+  async remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.invoiceService.remove(id, req.user.id);
+  }
+
+  /**
+   * Cancel an invoice
+   */
+  @Patch(':id/cancel')
+  @ApiResponse({
+    status: 200,
+    description: 'Invoice successfully cancelled',
+    type: InvoiceSingleResponseDto,
+  })
+  @ApiResponse({
+    status: 400,
+    description: 'Bad request (DRAFT or already CANCELLED)',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedResponseDto,
+  })
+  @ApiResponse({
+    status: 404,
+    description: 'Invoice not found',
+    type: ErrorResponseDto,
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    type: InternalServerErrorResponseDto,
+  })
+  async cancel(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return this.invoiceService.cancel(id, req.user.id);
   }
 }

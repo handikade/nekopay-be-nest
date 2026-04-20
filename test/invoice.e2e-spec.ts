@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
+import { PrismaService } from '../src/prisma/prisma.service';
 import { AppResponse, createE2EApp, getAuthToken } from './e2e-helper';
 
 interface Partner {
@@ -16,12 +17,15 @@ interface InvoiceResponse {
   subtotal: string;
   total_discount: string;
   grand_total: string;
+  document_status: string;
+  items: unknown[];
 }
 
 describe('InvoiceController (e2e)', () => {
   let app: INestApplication;
   let accessToken: string;
   let otherAccessToken: string;
+  let prisma: PrismaService;
 
   beforeAll(async () => {
     app = await createE2EApp();
@@ -30,6 +34,8 @@ describe('InvoiceController (e2e)', () => {
 
     const auth2 = await getAuthToken(app);
     otherAccessToken = auth2.token;
+
+    prisma = app.get<PrismaService>(PrismaService);
   });
 
   afterAll(async () => {
@@ -237,6 +243,111 @@ describe('InvoiceController (e2e)', () => {
         .patch(`/invoices/${fakeId}`)
         .set('Authorization', `Bearer ${accessToken}`)
         .send({ number: 'NEW-NUMBER' })
+        .expect(404);
+    });
+  });
+
+  describe('/invoices/:id (DELETE)', () => {
+    let invoiceId: string;
+
+    beforeEach(async () => {
+      const partner = await createPartner(accessToken);
+      const res = await request(app.getHttpServer() as string)
+        .post('/invoices')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          number: `INV-DELETE-${Date.now()}`,
+          issue_date: new Date().toISOString(),
+          partner_id: partner.id,
+          items: [{ description: 'Item 1', quantity: 1, unit_price: 100000 }],
+        });
+      invoiceId = (res.body as AppResponse<InvoiceResponse>).data.id;
+    });
+
+    it('should delete DRAFT invoice successfully', async () => {
+      await request(app.getHttpServer() as string)
+        .delete(`/invoices/${invoiceId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      // Verify 404 on GET
+      await request(app.getHttpServer() as string)
+        .get(`/invoices/${invoiceId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(404);
+    });
+
+    it('should return 400 when deleting non-DRAFT invoice', async () => {
+      // Manually update status to POSTED
+      await prisma.invoice.update({
+        where: { id: invoiceId },
+        data: { document_status: 'POSTED' },
+      });
+
+      await request(app.getHttpServer() as string)
+        .delete(`/invoices/${invoiceId}`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(400);
+    });
+
+    it('should return 404 when deleting other user invoice', async () => {
+      await request(app.getHttpServer() as string)
+        .delete(`/invoices/${invoiceId}`)
+        .set('Authorization', `Bearer ${otherAccessToken}`)
+        .expect(404);
+    });
+  });
+
+  describe('/invoices/:id/cancel (PATCH)', () => {
+    let invoiceId: string;
+
+    beforeEach(async () => {
+      const partner = await createPartner(accessToken);
+      const res = await request(app.getHttpServer() as string)
+        .post('/invoices')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          number: `INV-CANCEL-${Date.now()}`,
+          issue_date: new Date().toISOString(),
+          partner_id: partner.id,
+          items: [{ description: 'Item 1', quantity: 1, unit_price: 100000 }],
+        });
+      invoiceId = (res.body as AppResponse<InvoiceResponse>).data.id;
+    });
+
+    it('should cancel POSTED invoice successfully', async () => {
+      // Manually update status to POSTED
+      await prisma.invoice.update({
+        where: { id: invoiceId },
+        data: { document_status: 'POSTED' },
+      });
+
+      const res = await request(app.getHttpServer() as string)
+        .patch(`/invoices/${invoiceId}/cancel`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      const body = res.body as AppResponse<InvoiceResponse>;
+      expect(body.data.document_status).toBe('CANCELLED');
+    });
+
+    it('should return 400 when cancelling DRAFT invoice', async () => {
+      await request(app.getHttpServer() as string)
+        .patch(`/invoices/${invoiceId}/cancel`)
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(400);
+    });
+
+    it('should return 404 when cancelling other user invoice', async () => {
+      // Manually update status to POSTED
+      await prisma.invoice.update({
+        where: { id: invoiceId },
+        data: { document_status: 'POSTED' },
+      });
+
+      await request(app.getHttpServer() as string)
+        .patch(`/invoices/${invoiceId}/cancel`)
+        .set('Authorization', `Bearer ${otherAccessToken}`)
         .expect(404);
     });
   });

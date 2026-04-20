@@ -86,6 +86,30 @@ export class InvoiceService {
     });
   }
 
+  async remove(id: string, user_id: string): Promise<Invoice> {
+    const invoice = await this.findById(id, user_id);
+
+    if (invoice.document_status !== 'DRAFT') {
+      throw new BadRequestException('Only DRAFT invoices can be deleted');
+    }
+
+    return this.invoiceRepository.softDelete(id);
+  }
+
+  async cancel(id: string, user_id: string): Promise<Invoice> {
+    const invoice = await this.findById(id, user_id);
+
+    if (invoice.document_status === 'DRAFT') {
+      throw new BadRequestException('DRAFT invoices cannot be cancelled, use delete instead');
+    }
+
+    if (invoice.document_status === 'CANCELLED') {
+      throw new BadRequestException('Invoice is already cancelled');
+    }
+
+    return this.invoiceRepository.updateStatus(id, 'CANCELLED');
+  }
+
   private async calculateInvoiceTotals(items: InvoiceItemCreatePayloadDto[]) {
     let subtotal = 0;
     let totalTax = 0;

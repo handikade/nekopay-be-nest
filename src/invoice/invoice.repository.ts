@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { Invoice, InvoiceItem, Prisma } from '@prisma/client';
+import { Invoice, InvoiceDocStatus, InvoiceItem, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { InvoiceCreatePayloadDto } from './dto/invoice-create-payload.dto';
 
@@ -31,8 +31,11 @@ export class InvoiceRepository {
   }
 
   async findById(id: string): Promise<(Invoice & { items: InvoiceItem[] }) | null> {
-    return this.prisma.invoice.findUnique({
-      where: { id },
+    return this.prisma.invoice.findFirst({
+      where: {
+        id,
+        deleted_at: null,
+      },
       include: {
         items: true,
       },
@@ -60,6 +63,26 @@ export class InvoiceRepository {
           items: true,
         },
       });
+    });
+  }
+
+  async softDelete(id: string): Promise<Invoice> {
+    return this.prisma.invoice.update({
+      where: { id },
+      data: { deleted_at: new Date() },
+      include: {
+        items: true,
+      },
+    });
+  }
+
+  async updateStatus(id: string, status: InvoiceDocStatus): Promise<Invoice> {
+    return this.prisma.invoice.update({
+      where: { id },
+      data: { document_status: status },
+      include: {
+        items: true,
+      },
     });
   }
 }

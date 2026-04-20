@@ -8,6 +8,7 @@ type MockPrismaService = {
   invoice: {
     create: jest.Mock;
     findUnique: jest.Mock;
+    findFirst: jest.Mock;
     update: jest.Mock;
   };
   invoiceItem: {
@@ -45,12 +46,15 @@ describe('InvoiceRepository', () => {
     invoice: {
       create: jest.fn(),
       findUnique: jest.fn(),
+      findFirst: jest.fn(),
       update: jest.fn(),
     },
     invoiceItem: {
       deleteMany: jest.fn(),
     },
-    $transaction: jest.fn((callback: (tx: any) => Promise<any>) => callback(mockPrismaService)),
+    $transaction: jest.fn((callback: (tx: unknown) => Promise<unknown>) =>
+      callback(mockPrismaService),
+    ),
   };
 
   beforeEach(async () => {
@@ -138,14 +142,59 @@ describe('InvoiceRepository', () => {
   });
 
   describe('findById', () => {
-    it('should find an invoice by id', async () => {
-      mockPrismaService.invoice.findUnique.mockResolvedValue(mockInvoice);
+    it('should find an invoice by id and ensure it is not soft-deleted', async () => {
+      mockPrismaService.invoice.findFirst.mockResolvedValue(mockInvoice);
       const result = await repository.findById('invoice-id-123');
-      expect(mockPrismaService.invoice.findUnique).toHaveBeenCalledWith({
-        where: { id: 'invoice-id-123' },
+      expect(mockPrismaService.invoice.findFirst).toHaveBeenCalledWith({
+        where: {
+          id: 'invoice-id-123',
+          deleted_at: null,
+        },
         include: { items: true },
       });
       expect(result).toEqual(mockInvoice);
+    });
+  });
+
+  describe('softDelete', () => {
+    it('should successfully soft delete an invoice', async () => {
+      const now = new Date();
+      jest.useFakeTimers();
+      jest.setSystemTime(now);
+
+      mockPrismaService.invoice.update.mockResolvedValue({
+        ...mockInvoice,
+        deleted_at: now,
+      });
+
+      const result = await repository.softDelete('invoice-id-123');
+
+      expect(mockPrismaService.invoice.update).toHaveBeenCalledWith({
+        where: { id: 'invoice-id-123' },
+        data: { deleted_at: now },
+        include: { items: true },
+      });
+      expect(result.deleted_at).toEqual(now);
+
+      jest.useRealTimers();
+    });
+  });
+
+  describe('updateStatus', () => {
+    it('should successfully update invoice status', async () => {
+      mockPrismaService.invoice.update.mockResolvedValue({
+        ...mockInvoice,
+        document_status: 'CANCELLED',
+      });
+
+      const result = await repository.updateStatus('invoice-id-123', 'CANCELLED');
+
+      expect(mockPrismaService.invoice.update).toHaveBeenCalledWith({
+        where: { id: 'invoice-id-123' },
+        data: { document_status: 'CANCELLED' },
+        include: { items: true },
+      });
+      expect(result.document_status).toBe('CANCELLED');
     });
   });
 
