@@ -1,6 +1,11 @@
 import { Body, Controller, Post, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { Request } from 'express';
+import {
+  ErrorResponseDto,
+  InternalServerErrorResponseDto,
+  UnauthorizedResponseDto,
+} from '../_core/types/error-response.type';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { InvoiceCreatePayloadDto } from './dto/invoice-create-payload.dto';
 import { InvoiceCreateResponseDto } from './dto/invoice-create-response.dto';
@@ -29,10 +34,17 @@ export class InvoiceController {
   @ApiResponse({
     status: 400,
     description: 'Bad request (validation error)',
+    type: ErrorResponseDto,
   })
   @ApiResponse({
     status: 401,
     description: 'Unauthorized',
+    type: UnauthorizedResponseDto,
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    type: InternalServerErrorResponseDto,
   })
   async create(@Req() req: AuthenticatedRequest, @Body() dto: InvoiceCreatePayloadDto) {
     // Inject user_id from the authenticated request to ensure ownership
