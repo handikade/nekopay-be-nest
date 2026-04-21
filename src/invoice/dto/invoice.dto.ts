@@ -8,14 +8,8 @@ import { InvoiceItemCreateSchema } from './invoice-item-create-payload.dto';
  */
 export const InvoiceItemResponseSchema = InvoiceItemCreateSchema.extend({
   id: z.string().uuid().describe('Invoice item ID'),
-  created_at: z
-    .date()
-    .transform((val) => val.toISOString())
-    .describe('Creation timestamp'),
-  updated_at: z
-    .date()
-    .transform((val) => val.toISOString())
-    .describe('Last update timestamp'),
+  created_at: z.string().describe('Creation timestamp'),
+  updated_at: z.string().describe('Last update timestamp'),
 });
 
 /**
@@ -27,14 +21,8 @@ export const InvoiceResponseSchema = InvoiceCreateSchema.extend({
     .enum(['DRAFT', 'POSTED', 'PAID', 'CANCELLED'])
     .describe('Invoice document status'),
   sent_status: z.enum(['SENT', 'NOT_SENT']).describe('Invoice sent status'),
-  created_at: z
-    .date()
-    .transform((val) => val.toISOString())
-    .describe('Creation timestamp'),
-  updated_at: z
-    .date()
-    .transform((val) => val.toISOString())
-    .describe('Last update timestamp'),
+  created_at: z.string().describe('Creation timestamp'),
+  updated_at: z.string().describe('Last update timestamp'),
   items: z.array(InvoiceItemResponseSchema).describe('List of invoice items'),
 });
 

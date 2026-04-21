@@ -24,12 +24,7 @@ export const InvoiceCreateSchema = z.object({
   user_id: z.uuid().describe('User ID'),
   partner_id: z.uuid().describe('Partner ID'),
   partner_name: z.string().min(1).max(255).optional().describe('Snapshot of partner name'),
-  partner_company_email: z
-    .string()
-    .email()
-    .max(255)
-    .optional()
-    .describe('Snapshot of partner email'),
+  partner_company_email: z.email().max(255).optional().describe('Snapshot of partner email'),
   partner_company_phone: z.string().min(1).max(20).optional().describe('Snapshot of partner phone'),
   partner_address: z
     .string()
