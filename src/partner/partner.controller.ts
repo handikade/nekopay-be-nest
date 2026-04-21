@@ -47,7 +47,7 @@ export class PartnerController {
   })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getNextNumber(@Req() req: AuthenticatedRequest) {
-    return this.partnerService.getNextNumber(req.user.id);
+    return await this.partnerService.getNextNumber(req.user.id);
   }
 
   /**

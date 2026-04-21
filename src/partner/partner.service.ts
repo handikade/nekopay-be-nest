@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { incrementDocNumber } from '../_core/utils/increment-doc-number.util';
-import { CreatePartnerSchema, PartnerCreatePayloadDto } from './dto/partner-create-payload.dto';
+import {
+  InternalCreatePartnerSchema,
+  PartnerCreatePayloadDto,
+} from './dto/partner-create-payload.dto';
 import { FindAllPartnerSchema, PartnerQueryDto } from './dto/partner-query.dto';
 import { PartnerUpdatePayloadDto, UpdatePartnerSchema } from './dto/partner-update-payload.dto';
 import { PartnerRepository } from './partner.repository';
@@ -31,14 +34,14 @@ export class PartnerService {
     // Inject the logged-in user's ID to prevent manual user_id assignment
     const payload = { ...dto, user_id: userId };
 
-    // Validate the complete payload
-    const validated = CreatePartnerSchema.safeParse(payload);
+    // Validate the complete payload using InternalCreatePartnerSchema
+    const validated = InternalCreatePartnerSchema.safeParse(payload);
     if (!validated.success) {
       const firstIssue = validated.error.issues[0];
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
     }
 
-    return this.partnerRepository.create(validated.data as PartnerCreatePayloadDto);
+    return this.partnerRepository.create(validated.data);
   }
 
   async findById(id: string, user: UserPayload, includeDeleted: boolean = false) {
