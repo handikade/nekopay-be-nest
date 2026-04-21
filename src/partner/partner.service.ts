@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { incrementDocNumber } from '../_core/utils/increment-doc-number.util';
 import { CreatePartnerSchema, PartnerCreatePayloadDto } from './dto/partner-create-payload.dto';
 import { FindAllPartnerSchema, PartnerQueryDto } from './dto/partner-query.dto';
 import { PartnerUpdatePayloadDto, UpdatePartnerSchema } from './dto/partner-update-payload.dto';
@@ -19,6 +20,12 @@ export interface UserPayload {
 @Injectable()
 export class PartnerService {
   constructor(private readonly partnerRepository: PartnerRepository) {}
+
+  async getNextNumber(userId: string): Promise<{ number: string }> {
+    const latestNumber = await this.partnerRepository.findLatestNumber(userId);
+    const nextNumber = incrementDocNumber(latestNumber || '');
+    return { number: nextNumber };
+  }
 
   async create(userId: string, dto: PartnerCreatePayloadDto) {
     // Inject the logged-in user's ID to prevent manual user_id assignment

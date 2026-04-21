@@ -129,4 +129,40 @@ describe('PartnerController (e2e)', () => {
       .get('/partners')
       .expect(401);
   });
+
+  it('/partners/next-number (GET) - Should return next partner number', async () => {
+    // 1. Get initial next number
+    const res1 = await request(app.getHttpServer() as string)
+      .get('/partners/next-number')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    const body1 = (res1 as any).body as AppResponse<{ number: string }>;
+    expect(body1.data.number).toBeDefined();
+
+    // 2. Create a partner with a specific number
+    const timestamp = Date.now();
+    const customNumber = `E2E-${timestamp}-001`;
+    await request(app.getHttpServer() as string)
+      .post('/partners')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        number: customNumber,
+        name: `E2E Partner ${timestamp}`,
+        types: ['SUPPLIER'],
+        legal_entity: 'PT',
+        company_email: `e2e_${timestamp}@test.com`,
+        company_phone: '0812345681',
+      })
+      .expect(201);
+
+    // 3. Get next number again, should be incremented from customNumber
+    const res2 = await request(app.getHttpServer() as string)
+      .get('/partners/next-number')
+      .set('Authorization', `Bearer ${accessToken}`)
+      .expect(200);
+
+    const body2 = (res2 as any).body as AppResponse<{ number: string }>;
+    expect(body2.data.number).toBe(`E2E-${timestamp}-002`);
+  });
 });

@@ -20,6 +20,7 @@ import { PartnerUpdatePayloadDto } from './dto/partner-update-payload.dto';
 import {
   PartnerCreateSingleResponseDto,
   PartnerListResponseDto,
+  PartnerNextNumberResponseDto,
   PartnerSingleResponseDto,
 } from './dto/partner.dto';
 import { PartnerService } from './partner.service';
@@ -34,6 +35,20 @@ interface AuthenticatedRequest extends Request {
 @Controller('partners')
 export class PartnerController {
   constructor(private readonly partnerService: PartnerService) {}
+
+  /**
+   * Get next partner number
+   */
+  @Get('next-number')
+  @ApiResponse({
+    status: 200,
+    description: 'Return the next partner number',
+    type: PartnerNextNumberResponseDto,
+  })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  async getNextNumber(@Req() req: AuthenticatedRequest) {
+    return this.partnerService.getNextNumber(req.user.id);
+  }
 
   /**
    * Create a new partner

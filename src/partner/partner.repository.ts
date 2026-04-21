@@ -195,4 +195,21 @@ export class PartnerRepository {
       },
     });
   }
+
+  async findLatestNumber(userId: string): Promise<string | null> {
+    const latestPartner = await this.prisma.partner.findFirst({
+      where: {
+        user_id: userId,
+        deleted_at: null,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+      select: {
+        number: true,
+      },
+    });
+
+    return latestPartner?.number || null;
+  }
 }

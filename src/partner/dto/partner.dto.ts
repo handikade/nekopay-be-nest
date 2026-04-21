@@ -141,6 +141,13 @@ export const PartnerCreateResponseSchema = z.object({
   id: z.string().uuid().describe('Created partner ID'),
 });
 
+/**
+ * Schema for next partner number response.
+ */
+export const PartnerNextNumberSchema = z.object({
+  number: z.string().describe('The predicted next partner number'),
+});
+
 // --- DTO Classes ---
 
 export class PartnerDto extends createZodDto(PartnerSchema) {}
@@ -148,6 +155,7 @@ export class PartnerFullDto extends createZodDto(PartnerFullSchema) {}
 export class PartnerResponseDto extends createZodDto(PartnerResponseSchema) {}
 export class PartnerAdminResponseDto extends createZodDto(PartnerAdminResponseSchema) {}
 export class PartnerCreateResponseDto extends createZodDto(PartnerCreateResponseSchema) {}
+export class PartnerNextNumberDto extends createZodDto(PartnerNextNumberSchema) {}
 
 // --- Wrapped Response DTOs for Swagger ---
 
@@ -161,4 +169,8 @@ export class PartnerCreateSingleResponseDto extends makeResponseDto(
 
 export class PartnerListResponseDto extends makeResponseDto(
   makeResponseSchema(z.array(PartnerAdminResponseSchema)),
+) {}
+
+export class PartnerNextNumberResponseDto extends makeResponseDto(
+  makeResponseSchema(PartnerNextNumberSchema),
 ) {}
