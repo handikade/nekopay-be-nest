@@ -42,6 +42,23 @@ export class InvoiceRepository {
     });
   }
 
+  async findLatestNumber(userId: string): Promise<string | null> {
+    const latestInvoice = await this.prisma.invoice.findFirst({
+      where: {
+        user_id: userId,
+        deleted_at: null,
+      },
+      orderBy: {
+        created_at: 'desc',
+      },
+      select: {
+        number: true,
+      },
+    });
+
+    return latestInvoice?.number || null;
+  }
+
   async update(id: string, data: InvoiceUpdateData): Promise<Invoice> {
     const { items, ...invoiceData } = data;
 

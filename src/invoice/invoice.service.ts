@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Invoice } from '@prisma/client';
 import { calculateTaxAmount } from '../_core/utils/calculate-tax.util';
+import { incrementDocNumber } from '../_core/utils/increment-doc-number.util';
 import { PartnerRepository } from '../partner/partner.repository';
 import { TaxRepository } from '../tax/tax.repository';
 import { InvoiceCreatePayloadDto } from './dto/invoice-create-payload.dto';
@@ -15,6 +16,13 @@ export class InvoiceService {
     private readonly partnerRepository: PartnerRepository,
     private readonly taxRepository: TaxRepository,
   ) {}
+
+  async getNextNumber(userId: string): Promise<{ next_number: string }> {
+    const latestNumber = await this.invoiceRepository.findLatestNumber(userId);
+    return {
+      next_number: incrementDocNumber(latestNumber || ''),
+    };
+  }
 
   async create(data: InvoiceCreatePayloadDto): Promise<Invoice> {
     const partner = await this.partnerRepository.findById(data.partner_id);

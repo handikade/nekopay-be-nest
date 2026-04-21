@@ -8,6 +8,7 @@ describe('InvoiceController', () => {
 
   const mockInvoiceService = {
     create: jest.fn(),
+    getNextNumber: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -30,6 +31,23 @@ describe('InvoiceController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  describe('getNextNumber', () => {
+    it('should call invoiceService.getNextNumber with user_id from request', async () => {
+      const mockReq = {
+        user: { id: 'user-id-123', username: 'testuser', role: 'user' },
+      } as unknown as AuthenticatedRequest;
+
+      const expectedResponse = { next_number: 'INV-001' };
+      mockInvoiceService.getNextNumber.mockResolvedValue(expectedResponse);
+
+      const result = await controller.getNextNumber(mockReq);
+
+      expect(mockInvoiceService.getNextNumber).toHaveBeenCalledTimes(1);
+      expect(mockInvoiceService.getNextNumber).toHaveBeenCalledWith('user-id-123');
+      expect(result).toEqual(expectedResponse);
+    });
   });
 
   describe('create', () => {

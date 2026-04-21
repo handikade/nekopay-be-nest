@@ -9,6 +9,7 @@ import {
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { InvoiceCreatePayloadDto } from './dto/invoice-create-payload.dto';
 import { InvoiceCreateResponseDto } from './dto/invoice-create-response.dto';
+import { InvoiceNextNumberResponseDto } from './dto/invoice-next-number-response.dto';
 import { InvoiceUpdatePayloadDto } from './dto/invoice-update-payload.dto';
 import { InvoiceSingleResponseDto } from './dto/invoice.dto';
 import { InvoiceService } from './invoice.service';
@@ -52,6 +53,29 @@ export class InvoiceController {
     // Inject user_id from the authenticated request to ensure ownership
     dto.user_id = req.user.id;
     return this.invoiceService.create(dto);
+  }
+
+  /**
+   * Get the next invoice number
+   */
+  @Get('next-number')
+  @ApiResponse({
+    status: 200,
+    description: 'Next invoice number successfully retrieved',
+    type: InvoiceNextNumberResponseDto,
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Unauthorized',
+    type: UnauthorizedResponseDto,
+  })
+  @ApiResponse({
+    status: 500,
+    description: 'Internal server error',
+    type: InternalServerErrorResponseDto,
+  })
+  async getNextNumber(@Req() req: AuthenticatedRequest) {
+    return this.invoiceService.getNextNumber(req.user.id);
   }
 
   /**

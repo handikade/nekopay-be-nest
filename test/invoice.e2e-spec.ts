@@ -101,6 +101,57 @@ describe('InvoiceController (e2e)', () => {
     expect(body.data.grand_total).toBeDefined();
   });
 
+  describe('/invoices/next-number (GET)', () => {
+    it('should return 001 if no invoices exist for user', async () => {
+      await request(app.getHttpServer() as string)
+        .get('/invoices/next-number')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .expect(200);
+
+      // Since we just created an invoice in the previous test "Success",
+      // it might not be 001. Let's make it more deterministic by using a new user.
+      const newUserAuth = await getAuthToken(app);
+      const res2 = await request(app.getHttpServer() as string)
+        .get('/invoices/next-number')
+        .set('Authorization', `Bearer ${newUserAuth.token}`)
+        .expect(200);
+
+      const body2 = res2.body as AppResponse<{ next_number: string }>;
+      expect(body2.data.next_number).toBe('001');
+    });
+    it('should return incremented number based on latest invoice', async () => {
+      const newUserAuth = await getAuthToken(app);
+      const partner = await createPartner(newUserAuth.token);
+
+      // Create first invoice
+      await request(app.getHttpServer() as string)
+        .post('/invoices')
+        .set('Authorization', `Bearer ${newUserAuth.token}`)
+        .send({
+          number: 'INV-001',
+          issue_date: new Date().toISOString(),
+          partner_id: partner.id,
+          items: [{ description: 'Item 1', quantity: 1, unit_price: 1000 }],
+        })
+        .expect(201);
+
+      // Get next number
+      const res = await request(app.getHttpServer() as string)
+        .get('/invoices/next-number')
+        .set('Authorization', `Bearer ${newUserAuth.token}`)
+        .expect(200);
+
+      const body = res.body as AppResponse<{ next_number: string }>;
+      expect(body.data.next_number).toBe('INV-002');
+    });
+
+    it('should return 401 when unauthenticated', async () => {
+      await request(app.getHttpServer() as string)
+        .get('/invoices/next-number')
+        .expect(401);
+    });
+  });
+
   it('/invoices (POST) - Unauthenticated (401)', () => {
     return request(app.getHttpServer() as string)
       .post('/invoices')

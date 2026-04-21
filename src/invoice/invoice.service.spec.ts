@@ -13,6 +13,7 @@ type MockInvoiceRepository = {
   update: jest.Mock;
   softDelete: jest.Mock;
   updateStatus: jest.Mock;
+  findLatestNumber: jest.Mock;
 };
 
 type MockPartnerRepository = {
@@ -32,6 +33,7 @@ describe('InvoiceService', () => {
     update: jest.fn(),
     softDelete: jest.fn(),
     updateStatus: jest.fn(),
+    findLatestNumber: jest.fn(),
   };
 
   const mockPartnerRepository: MockPartnerRepository = {
@@ -83,6 +85,25 @@ describe('InvoiceService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('getNextNumber', () => {
+    it('should return incremented number if latest number exists', async () => {
+      mockInvoiceRepository.findLatestNumber.mockResolvedValue('INV-001');
+
+      const result = await service.getNextNumber('user-id-123');
+
+      expect(mockInvoiceRepository.findLatestNumber).toHaveBeenCalledWith('user-id-123');
+      expect(result).toEqual({ next_number: 'INV-002' });
+    });
+
+    it('should return 001 if no latest number exists', async () => {
+      mockInvoiceRepository.findLatestNumber.mockResolvedValue(null);
+
+      const result = await service.getNextNumber('user-id-123');
+
+      expect(result).toEqual({ next_number: '001' });
+    });
   });
 
   describe('create', () => {

@@ -156,6 +156,36 @@ describe('InvoiceRepository', () => {
     });
   });
 
+  describe('findLatestNumber', () => {
+    it('should return the latest invoice number for a user', async () => {
+      mockPrismaService.invoice.findFirst.mockResolvedValue({ number: 'INV-2026-005' });
+
+      const result = await repository.findLatestNumber('user-id-123');
+
+      expect(mockPrismaService.invoice.findFirst).toHaveBeenCalledWith({
+        where: {
+          user_id: 'user-id-123',
+          deleted_at: null,
+        },
+        orderBy: {
+          created_at: 'desc',
+        },
+        select: {
+          number: true,
+        },
+      });
+      expect(result).toBe('INV-2026-005');
+    });
+
+    it('should return null if no invoice found', async () => {
+      mockPrismaService.invoice.findFirst.mockResolvedValue(null);
+
+      const result = await repository.findLatestNumber('user-id-123');
+
+      expect(result).toBeNull();
+    });
+  });
+
   describe('softDelete', () => {
     it('should successfully soft delete an invoice', async () => {
       const now = new Date();
