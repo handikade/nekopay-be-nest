@@ -13,5 +13,7 @@
   - DON'T: `z.string().url()` -> DO: `z.url()`
 - Datetime validation:
   - DON'T: `z.string().datetime()` -> DO: `z.iso.datetime()`
+- Enum
+  - DON'T: `z.nativeEnum()` -> DO: `z.enum()`
 - Minimum length / non-empty:
   - DON'T: `z.string().nonempty()` -> DO: `z.string().min(1)`
