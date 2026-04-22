@@ -1,7 +1,8 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { TaxQueryDto, TaxQuerySchema } from './dto/tax-query.dto';
+import { TaxQueryDto } from './tax.dto';
 import { TaxRepository } from './tax.repository';
+import { TaxQuerySchema } from './tax.schema';
 
 @Injectable()
 export class TaxService {
