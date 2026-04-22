@@ -12,17 +12,20 @@ export const PaginationMetaSchema = z.object({
   totalPages: z.number().int().min(0).describe('Total number of pages'),
 });
 
+// 200
 export const makeSuccessResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   BaseSuccessResponseSchema.extend({
     data: dataSchema,
   });
 
+// 201
 export const makeCreatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   BaseSuccessResponseSchema.extend({
     statusCode: z.literal(201).describe('HTTP status code'),
     data: dataSchema,
   });
 
+// 200 with pagiunation meta
 export const makePaginatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   BaseSuccessResponseSchema.extend({
     data: dataSchema,
