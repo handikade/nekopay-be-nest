@@ -6,10 +6,10 @@ const BaseSuccessResponseSchema = z.object({
 });
 
 export const PaginationMetaSchema = z.object({
-  total: z.number().int().min(0).describe('Total number of records'),
-  page: z.number().int().min(1).describe('Current page number'),
-  limit: z.number().int().min(1).describe('Number of records per page'),
-  totalPages: z.number().int().min(0).describe('Total number of pages'),
+  total: z.number().describe('Total number of records'),
+  page: z.number().describe('Current page number'),
+  limit: z.number().describe('Number of records per page'),
+  totalPages: z.number().describe('Total number of pages'),
 });
 
 // 200
