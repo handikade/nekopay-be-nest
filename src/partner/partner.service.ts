@@ -6,13 +6,13 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { incrementDocNumber } from '../_core/utils/increment-doc-number.util';
+import { PartnerCreatePayloadDto, PartnerQueryDto, PartnerUpdatePayloadDto } from './partner.dto';
+import { PartnerRepository } from './partner.repository';
 import {
   InternalCreatePartnerSchema,
-  PartnerCreatePayloadDto,
-} from './dto/partner-create-payload.dto';
-import { FindAllPartnerSchema, PartnerQueryDto } from './dto/partner-query.dto';
-import { PartnerUpdatePayloadDto, UpdatePartnerSchema } from './dto/partner-update-payload.dto';
-import { PartnerRepository } from './partner.repository';
+  PartnerQuerySchema,
+  UpdatePartnerSchema,
+} from './partner.schema';
 
 export interface UserPayload {
   id: string;
@@ -31,11 +31,9 @@ export class PartnerService {
   }
 
   async create(userId: string, dto: PartnerCreatePayloadDto) {
-    // Inject the logged-in user's ID to prevent manual user_id assignment
     const payload = { ...dto, user_id: userId };
-
-    // Validate the complete payload using InternalCreatePartnerSchema
     const validated = InternalCreatePartnerSchema.safeParse(payload);
+
     if (!validated.success) {
       const firstIssue = validated.error.issues[0];
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
@@ -52,7 +50,6 @@ export class PartnerService {
       throw new NotFoundException('Partner not found');
     }
 
-    // Check ownership for user
     if (!isAdmin && partner.user_id !== user.id) {
       throw new ForbiddenException('You do not have permission to access this partner');
     }
@@ -61,7 +58,7 @@ export class PartnerService {
   }
 
   async findAll(user: UserPayload, query: PartnerQueryDto) {
-    const validated = FindAllPartnerSchema.safeParse(query);
+    const validated = PartnerQuerySchema.safeParse(query);
     if (!validated.success) {
       const firstIssue = validated.error.issues[0];
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
@@ -112,11 +109,10 @@ export class PartnerService {
   }
 
   async update(id: string, user: UserPayload, dto: PartnerUpdatePayloadDto) {
-    // Determine if partner exists and if the user has permission to update it
     await this.findById(id, user);
 
-    // Validate the update payload
     const validated = UpdatePartnerSchema.safeParse(dto);
+
     if (!validated.success) {
       const firstIssue = validated.error.issues[0];
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
@@ -126,19 +122,15 @@ export class PartnerService {
   }
 
   async delete(id: string, user: UserPayload) {
-    // Determine if partner exists and if the user has permission to delete it
     await this.findById(id, user);
-
-    return this.partnerRepository.delete(id);
+    await this.partnerRepository.delete(id);
   }
 
   async restore(id: string, user: UserPayload) {
-    // Only admin can restore
     if (user.role !== 'admin') {
       throw new ForbiddenException('Only administrators can restore a partner');
     }
 
-    // Determine if partner exists (even if deleted)
     await this.findById(id, user, true);
 
     return this.partnerRepository.restore(id);

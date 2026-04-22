@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Partner, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { InternalCreatePartner } from './dto/partner-create-payload.dto';
-import { PartnerUpdatePayloadDto } from './dto/partner-update-payload.dto';
+import { InternalCreatePartner, PartnerUpdatePayloadDto } from './partner.dto';
 
 @Injectable()
 export class PartnerRepository {

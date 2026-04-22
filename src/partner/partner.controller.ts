@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -11,27 +13,28 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs/swagger';
-import type { Request } from 'express';
-import { ErrorResponseDto, UnauthorizedResponseDto } from '../_core/types/error-response.type';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-import { PartnerCreatePayloadDto } from './dto/partner-create-payload.dto';
-import { PartnerQueryDto } from './dto/partner-query.dto';
-import { PartnerUpdatePayloadDto } from './dto/partner-update-payload.dto';
 import {
-  PartnerCreateSingleResponseDto,
-  PartnerListResponseDto,
-  PartnerNextNumberResponseDto,
-  PartnerSingleResponseDto,
-} from './dto/partner.dto';
+  ApiAuthErrors,
+  ApiResourceErrors,
+  ApiValidationErrors,
+} from '../_core/decorators/swagger-response.decorator';
+import { type AuthenticatedRequest } from '../_core/types/response-authenticated.type';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import {
+  PartnerCreatePayloadDto,
+  PartnerQueryDto,
+  PartnerUpdatePayloadDto,
+  ResponseSuccessPartnerIdOnlyDto,
+  ResponseSuccessPartnerListDto,
+  ResponseSuccessPartnerNextNumberDto,
+  ResponseSuccessPartnerSingleDto,
+} from './partner.dto';
 import { PartnerService } from './partner.service';
-
-interface AuthenticatedRequest extends Request {
-  user: { id: string; username: string; role: string };
-}
 
 @ApiTags('partners')
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth()
+@ApiAuthErrors()
 @Controller('partners')
 export class PartnerController {
   constructor(private readonly partnerService: PartnerService) {}
@@ -43,9 +46,8 @@ export class PartnerController {
   @ApiResponse({
     status: 200,
     description: 'Return the next partner number',
-    type: PartnerNextNumberResponseDto,
+    type: ResponseSuccessPartnerNextNumberDto,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async getNextNumber(@Req() req: AuthenticatedRequest) {
     return await this.partnerService.getNextNumber(req.user.id);
   }
@@ -57,18 +59,9 @@ export class PartnerController {
   @ApiResponse({
     status: 201,
     description: 'Partner successfully created',
-    type: PartnerCreateSingleResponseDto,
+    type: ResponseSuccessPartnerIdOnlyDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request (validation error)',
-    type: ErrorResponseDto,
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-    type: UnauthorizedResponseDto,
-  })
+  @ApiValidationErrors()
   async create(@Req() req: AuthenticatedRequest, @Body() dto: PartnerCreatePayloadDto) {
     const result = await this.partnerService.create(req.user.id, dto);
     return { id: result.id };
@@ -81,9 +74,8 @@ export class PartnerController {
   @ApiResponse({
     status: 200,
     description: 'Return list of partners',
-    type: PartnerListResponseDto,
+    type: ResponseSuccessPartnerListDto,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
   async findAll(@Req() req: AuthenticatedRequest, @Query() query: PartnerQueryDto) {
     return this.partnerService.findAll(req.user, query);
   }
@@ -95,11 +87,9 @@ export class PartnerController {
   @ApiResponse({
     status: 200,
     description: 'Return the specific partner',
-    type: PartnerSingleResponseDto,
+    type: ResponseSuccessPartnerSingleDto,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Partner not found' })
+  @ApiResourceErrors('Partner')
   async findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.partnerService.findById(id, req.user);
   }
@@ -111,18 +101,10 @@ export class PartnerController {
   @ApiResponse({
     status: 200,
     description: 'Partner successfully updated',
-    type: PartnerSingleResponseDto,
+    type: ResponseSuccessPartnerIdOnlyDto,
   })
-  @ApiResponse({
-    status: 400,
-    description: 'Bad request (validation error)',
-  })
-  @ApiResponse({
-    status: 401,
-    description: 'Unauthorized',
-  })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Partner not found' })
+  @ApiValidationErrors()
+  @ApiResourceErrors('Partner')
   async update(
     @Param('id') id: string,
     @Req() req: AuthenticatedRequest,
@@ -135,16 +117,14 @@ export class PartnerController {
    * Delete a partner
    */
   @Delete(':id')
+  @HttpCode(HttpStatus.NON_AUTHORITATIVE_INFORMATION)
   @ApiResponse({
-    status: 200,
+    status: 203,
     description: 'Partner successfully deleted',
-    type: PartnerSingleResponseDto,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({ status: 403, description: 'Forbidden' })
-  @ApiResponse({ status: 404, description: 'Partner not found' })
+  @ApiResourceErrors('Partner')
   async remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
-    return this.partnerService.delete(id, req.user);
+    await this.partnerService.delete(id, req.user);
   }
 
   /**
@@ -155,14 +135,9 @@ export class PartnerController {
   @ApiResponse({
     status: 200,
     description: 'Partner successfully restored',
-    type: PartnerSingleResponseDto,
+    type: ResponseSuccessPartnerIdOnlyDto,
   })
-  @ApiResponse({ status: 401, description: 'Unauthorized' })
-  @ApiResponse({
-    status: 403,
-    description: 'Forbidden (Only admin can restore or partner not belong to user)',
-  })
-  @ApiResponse({ status: 404, description: 'Partner not found' })
+  @ApiResourceErrors('Partner')
   async restore(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
     return this.partnerService.restore(id, req.user);
   }
