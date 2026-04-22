@@ -2,7 +2,9 @@ import { applyDecorators } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import {
   ResponseErrorBadRequestDto,
+  ResponseErrorConflictDto,
   ResponseErrorForbiddenDto,
+  ResponseErrorInternalServerDto,
   ResponseErrorNotFoundDto,
   ResponseErrorUnauthorizedDto,
 } from '../dtos/response-error.dto';
@@ -43,6 +45,36 @@ export function ApiResourceErrors(resourceName: string) {
       description: 'Forbidden',
       type: ResponseErrorForbiddenDto,
     }),
+    ApiResponse({
+      status: 404,
+      description: `${resourceName} not found`,
+      type: ResponseErrorNotFoundDto,
+    }),
+  );
+}
+
+export function ApiErrors500() {
+  return applyDecorators(
+    ApiResponse({
+      status: 500,
+      description: 'Internal Server Error',
+      type: ResponseErrorInternalServerDto,
+    }),
+  );
+}
+
+export function ApiErrors409() {
+  return applyDecorators(
+    ApiResponse({
+      status: 409,
+      description: 'Conflict',
+      type: ResponseErrorConflictDto,
+    }),
+  );
+}
+
+export function ApiErrors404(resourceName: string) {
+  return applyDecorators(
     ApiResponse({
       status: 404,
       description: `${resourceName} not found`,
