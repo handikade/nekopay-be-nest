@@ -5,5 +5,13 @@
   "testRegex": ".e2e-spec.ts$",
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "moduleNameMapper": {
+    "^@src/(.*)$": "<rootDir>/../src/$1",
+    "^@libs/(.*)$": "<rootDir>/../src/_libs/$1",
+    "^@core/(.*)$": "<rootDir>/../src/_core/$1",
+    "^@prisma/client$": "<rootDir>/../src/@generated/prisma",
+    "^@prisma/client/(.*)$": "<rootDir>/../src/@generated/prisma/$1",
+    "^@prisma/zod$": "<rootDir>/../src/@generated/zod"
   }
 }
