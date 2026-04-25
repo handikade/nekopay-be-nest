@@ -17,7 +17,9 @@
     "incremental": true,
     "skipLibCheck": true,
     "paths": {
-      "@prisma/client": ["src/@generated/prisma"]
+      "@src/*": ["src/*"],
+      "@prisma/client": ["src/@generated/prisma"],
+      "@prisma/zod": ["src/@generated/zod"]
     },
     "strictNullChecks": true,
     "types": ["jest", "node"],
