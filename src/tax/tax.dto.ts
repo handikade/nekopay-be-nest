@@ -1,15 +1,13 @@
-import { createZodDto } from 'nestjs-zod';
 import {
   makePaginatedResponseSchema,
   makeSuccessResponseSchema,
-} from '../_core/schemas/response-success.schema';
-import { TaxArrayResponseSchema, TaxQuerySchema, TaxResponseSchema, TaxSchema } from './tax.schema';
+} from '@core/schemas/response-success.schema';
+import { createZodDto } from 'nestjs-zod';
+import { TaxListSchema, TaxPresentationSchema, TaxQueryParamsSchema } from './tax.schema';
 
-export class TaxDto extends createZodDto(TaxSchema) {}
-export class TaxQueryDto extends createZodDto(TaxQuerySchema) {}
-export class TaxSingleResponseDto extends createZodDto(TaxSchema) {}
+export class TaxQueryParamsDTO extends createZodDto(TaxQueryParamsSchema) {}
 
-export class TaxListResponseDto extends createZodDto(
-  makePaginatedResponseSchema(TaxArrayResponseSchema),
+export class TaxListResponseDTO extends createZodDto(makePaginatedResponseSchema(TaxListSchema)) {}
+export class TaxResponseDTO extends createZodDto(
+  makeSuccessResponseSchema(TaxPresentationSchema),
 ) {}
-export class TaxResponseDto extends createZodDto(makeSuccessResponseSchema(TaxResponseSchema)) {}

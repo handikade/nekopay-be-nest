@@ -1,15 +1,15 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { TaxQueryDto } from './tax.dto';
+import { TaxQueryParamsDTO } from './tax.dto';
 import { TaxRepository } from './tax.repository';
-import { TaxQuerySchema } from './tax.schema';
+import { TaxListSchema, TaxPresentationSchema, TaxQueryParamsSchema } from './tax.schema';
 
 @Injectable()
 export class TaxService {
   constructor(private readonly taxRepository: TaxRepository) {}
 
-  async findAll(query: TaxQueryDto) {
-    const validated = TaxQuerySchema.safeParse(query);
+  async findAll(query: TaxQueryParamsDTO) {
+    const validated = TaxQueryParamsSchema.safeParse(query);
     if (!validated.success) {
       const firstIssue = validated.error.issues[0];
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
@@ -31,7 +31,7 @@ export class TaxService {
     const [total, data] = await this.taxRepository.findAll(where, skip, limit, orderBy);
 
     return {
-      data,
+      data: TaxListSchema.parse(data),
       meta: {
         total,
         page,
@@ -48,6 +48,6 @@ export class TaxService {
       throw new NotFoundException('Tax not found');
     }
 
-    return tax;
+    return TaxPresentationSchema.parse(tax);
   }
 }
