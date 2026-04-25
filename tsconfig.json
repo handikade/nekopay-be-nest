@@ -19,6 +19,7 @@
     "paths": {
       "@src/*": ["src/*"],
       "@prisma/client": ["src/@generated/prisma"],
+      "@prisma/client/*": ["src/@generated/prisma/*"],
       "@prisma/zod": ["src/@generated/zod"]
     },
     "strictNullChecks": true,
