@@ -16,6 +16,9 @@
     "baseUrl": "./",
     "incremental": true,
     "skipLibCheck": true,
+    "paths": {
+      "@prisma/client": ["src/@generated/prisma"]
+    },
     "strictNullChecks": true,
     "types": ["jest", "node"],
     "forceConsistentCasingInFileNames": true,
