@@ -1,20 +1,18 @@
 import { Injectable } from '@nestjs/common';
 import { Bank, Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateBankDto } from './dto/create-bank.dto';
-import { UpdateBankDto } from './dto/update-bank.dto';
 
 @Injectable()
 export class BankRepository {
   constructor(private readonly prisma: PrismaService) {}
 
-  async create(data: CreateBankDto): Promise<Bank> {
+  async create(data: Prisma.BankCreateInput): Promise<Bank> {
     return this.prisma.bank.create({
       data,
     });
   }
 
-  async update(id: string, data: UpdateBankDto): Promise<Bank> {
+  async update(id: string, data: Prisma.BankUpdateInput): Promise<Bank> {
     return this.prisma.bank.update({
       where: { id },
       data,

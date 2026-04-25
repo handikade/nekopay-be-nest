@@ -1,14 +1,9 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { BankCreateInputSchema, BankUpdateInputSchema } from '@prisma/zod';
+import { BankQueryParamsDTO } from './bank.dto';
 import { BankRepository } from './bank.repository';
-import { CreateBankDto, CreateBankSchema } from './dto/create-bank.dto';
-import { FindAllBankDto, FindAllBankSchema } from './dto/find-all-bank.dto';
-import { UpdateBankDto, UpdateBankSchema } from './dto/update-bank.dto';
+import { BankQueryParamsSchema } from './bank.schema';
 
 export interface UserPayload {
   id: string;
@@ -20,18 +15,14 @@ export interface UserPayload {
 export class BankService {
   constructor(private readonly bankRepository: BankRepository) {}
 
-  async create(user: UserPayload, dto: CreateBankDto) {
-    if (user.role !== 'admin') {
-      throw new ForbiddenException('Only admin can create banks');
-    }
-
-    const validated = CreateBankSchema.safeParse(dto);
+  async create(dto: unknown) {
+    const validated = BankCreateInputSchema.safeParse(dto);
     if (!validated.success) {
       const firstIssue = validated.error.issues[0];
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
     }
 
-    return this.bankRepository.create(validated.data as CreateBankDto);
+    return this.bankRepository.create(validated.data);
   }
 
   async findById(id: string) {
@@ -44,12 +35,14 @@ export class BankService {
     return bank;
   }
 
-  async findAll(user: UserPayload, query: FindAllBankDto) {
-    const validated = FindAllBankSchema.safeParse(query);
+  async findAll(query: BankQueryParamsDTO) {
+    const validated = BankQueryParamsSchema.safeParse(query);
+
     if (!validated.success) {
       const firstIssue = validated.error.issues[0];
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
     }
+
     const { page, limit, search, sortBy, sortOrder } = validated.data;
     const skip = (page - 1) * limit;
 
@@ -79,27 +72,19 @@ export class BankService {
     };
   }
 
-  async update(id: string, user: UserPayload, dto: UpdateBankDto) {
-    if (user.role !== 'admin') {
-      throw new ForbiddenException('Only admin can update banks');
-    }
-
+  async update(id: string, dto: unknown) {
     await this.findById(id);
 
-    const validated = UpdateBankSchema.safeParse(dto);
+    const validated = BankUpdateInputSchema.safeParse(dto);
     if (!validated.success) {
       const firstIssue = validated.error.issues[0];
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
     }
 
-    return this.bankRepository.update(id, validated.data as UpdateBankDto);
+    return this.bankRepository.update(id, validated.data);
   }
 
-  async delete(id: string, user: UserPayload) {
-    if (user.role !== 'admin') {
-      throw new ForbiddenException('Only admin can delete banks');
-    }
-
+  async delete(id: string) {
     await this.findById(id);
 
     return this.bankRepository.delete(id);
