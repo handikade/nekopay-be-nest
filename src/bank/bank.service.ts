@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client';
 import { BankCreateInputSchema, BankUpdateInputSchema } from '@prisma/zod';
 import { BankQueryParamsDTO } from './bank.dto';
 import { BankRepository } from './bank.repository';
-import { BankQueryParamsSchema } from './bank.schema';
+import { BankListSchema, BankPresentationSchema, BankQueryParamsSchema } from './bank.schema';
 
 export interface UserPayload {
   id: string;
@@ -32,7 +32,7 @@ export class BankService {
       throw new NotFoundException('Bank not found');
     }
 
-    return bank;
+    return BankPresentationSchema.parse(bank);
   }
 
   async findAll(query: BankQueryParamsDTO) {
@@ -62,7 +62,7 @@ export class BankService {
     const [total, data] = await this.bankRepository.findAll(where, skip, limit, orderBy);
 
     return {
-      data,
+      data: BankListSchema.parse(data),
       meta: {
         total,
         page,
