@@ -25,7 +25,7 @@ export const makeCreatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T)
     data: dataSchema,
   });
 
-// 200 with pagiunation meta
+// 200 with pagination meta
 export const makePaginatedResponseSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
   BaseSuccessResponseSchema.extend({
     data: dataSchema,

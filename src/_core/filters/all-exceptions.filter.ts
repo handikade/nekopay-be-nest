@@ -1,5 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, HttpException, HttpStatus } from '@nestjs/common';
 import { HttpAdapterHost } from '@nestjs/core';
+import { z } from 'zod';
 
 @Catch()
 export class AllExceptionsFilter implements ExceptionFilter {
@@ -21,7 +22,6 @@ export class AllExceptionsFilter implements ExceptionFilter {
       if (typeof exceptionResponse === 'string') {
         message = exceptionResponse;
       } else if (typeof exceptionResponse === 'object' && exceptionResponse !== null) {
-        // Many NestJS exceptions return { statusCode, message, error }
         const exRes = exceptionResponse as { message?: string; error?: string };
         message = exRes.message || message;
         error = exRes.error || error;
@@ -31,7 +31,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       message = exception.message;
     }
 
-    const responseBody = {
+    const responseBody: ErrorResponse = {
       statusCode: httpStatus,
       message,
       error,
@@ -42,3 +42,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
     httpAdapter.reply(ctx.getResponse<unknown>(), responseBody, httpStatus);
   }
 }
+
+export const ErrorResponseSchema = z.object({
+  statusCode: z.number().int().describe('HTTP status code'),
+  message: z.string().describe('Error message'),
+  error: z.string().describe('Error type or short description'),
+  timestamp: z.iso.datetime().describe('ISO timestamp of the error'),
+  path: z.string().describe('URL path where the error occurred'),
+});
+
+export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
