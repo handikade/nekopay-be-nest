@@ -29,6 +29,7 @@ import {
   ResponseSuccessPartnerListDto,
   ResponseSuccessPartnerNextNumberDto,
   ResponseSuccessPartnerUpdateDto,
+  ResponseSuccessPartnerViewDto,
 } from './partner.dto';
 import { PartnerService } from './partner.service';
 
@@ -84,6 +85,23 @@ export class PartnerController {
   })
   async findAll(@Req() req: AuthenticatedRequest, @Query() query: PartnerQueryDTO) {
     return this.partnerService.findAll(req.user.id, query);
+  }
+
+  /**
+   * Find One
+   */
+  @Get(':id')
+  @ApiResponse({
+    status: 200,
+    description: 'Return the specific partner',
+    type: ResponseSuccessPartnerViewDto,
+  })
+  @ApiResourceErrors('Partner')
+  async findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+    return await this.partnerService.findByIdAndUserId({
+      id,
+      userId: req.user.id,
+    });
   }
 
   /**

@@ -2,10 +2,12 @@ import { PartnerType } from '@prisma/client';
 import { PartnerSchema, SortOrderSchema } from '@prisma/zod';
 import {
   PartnerBankAccountCreateSchema,
+  PartnerBankAccountPresentationSchema,
   PartnerBankAccountUpdateSchema,
 } from '@src/partner-bank-account/partner-bank-account.schema';
 import {
   PartnerContactCreateSchema,
+  PartnerContactPresentationSchema,
   PartnerContactUpdateSchema,
 } from '@src/partner-contact/partner-contact.schema';
 import { z } from 'zod';
@@ -36,6 +38,8 @@ export const PartnerPresentationSchema = PartnerSchema.omit({
   created_at: z
     .preprocess((val) => (val instanceof Date ? val.toISOString() : val), z.iso.datetime())
     .describe('Creation timestamp'),
+  contacts: z.array(PartnerContactPresentationSchema).optional(),
+  partner_bank_accounts: z.array(PartnerBankAccountPresentationSchema).optional(),
 });
 
 export const PartnerListSchema = z.array(
