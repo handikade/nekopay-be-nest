@@ -1,23 +1,12 @@
-import { z } from 'zod';
+import { PartnerBankAccountSchema } from '@src/@generated/zod';
+import { BankPresentationSchema } from '@src/bank/bank.schema';
+import z from 'zod';
 
-export const PartnerBankSchema = z.object({
-  id: z.uuid().describe('Bank ID'),
-  code: z.string().describe('Bank code'),
-  name: z.string().describe('Bank name'),
+export const PartnerBankAccountPresentationSchema = PartnerBankAccountSchema.omit({
+  created_at: true,
+  updated_at: true,
+}).extend({
+  bank: BankPresentationSchema,
 });
 
-export const PartnerBankAccountSchema = z.object({
-  id: z.uuid().describe('Bank account ID'),
-  bank_id: z.uuid().describe('Bank ID'),
-  account_number: z.string().describe('Bank account number'),
-  account_name: z.string().describe('Account holder name'),
-  created_at: z.iso
-    .datetime()
-    .transform((val) => new Date(val))
-    .describe('Creation timestamp'),
-  updated_at: z.iso
-    .datetime()
-    .transform((val) => new Date(val))
-    .describe('Last update timestamp'),
-  bank: PartnerBankSchema.describe('Associated bank details'),
-});
+export const PartnerBankAccountListSchema = z.array(PartnerBankAccountPresentationSchema);

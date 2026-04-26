@@ -1,33 +1,24 @@
 import {
-  Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   HttpStatus,
   Param,
   Patch,
-  Post,
   Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs/swagger';
-import {
-  ApiAuthErrors,
-  ApiResourceErrors,
-  ApiValidationErrors,
-} from '../_core/decorators/swagger-response.decorator';
+import { ApiAuthErrors, ApiResourceErrors } from '../_core/decorators/swagger-response.decorator';
 import { type AuthenticatedRequest } from '../_core/types/response-authenticated.type';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import {
-  PartnerCreatePayloadDto,
-  PartnerQueryDto,
-  PartnerUpdatePayloadDto,
-  ResponseSuccessPartnerIdOnlyDto,
+  PartnerQueryDTO,
   ResponseSuccessPartnerListDto,
   ResponseSuccessPartnerNextNumberDto,
-  ResponseSuccessPartnerSingleDto,
 } from './partner.dto';
 import { PartnerService } from './partner.service';
 
@@ -40,7 +31,20 @@ export class PartnerController {
   constructor(private readonly partnerService: PartnerService) {}
 
   /**
-   * Get next partner number
+   * Find All
+   */
+  @Get()
+  @ApiResponse({
+    status: 200,
+    description: 'Return list of partners',
+    type: ResponseSuccessPartnerListDto,
+  })
+  async findAll(@Req() req: AuthenticatedRequest, @Query() query: PartnerQueryDTO) {
+    return this.partnerService.findAll(req.user.id, query);
+  }
+
+  /**
+   * Get Next Number
    */
   @Get('next-number')
   @ApiResponse({
@@ -53,68 +57,7 @@ export class PartnerController {
   }
 
   /**
-   * Create a new partner
-   */
-  @Post()
-  @ApiResponse({
-    status: 201,
-    description: 'Partner successfully created',
-    type: ResponseSuccessPartnerIdOnlyDto,
-  })
-  @ApiValidationErrors()
-  async create(@Req() req: AuthenticatedRequest, @Body() dto: PartnerCreatePayloadDto) {
-    const result = await this.partnerService.create(req.user.id, dto);
-    return { id: result.id };
-  }
-
-  /**
-   * Get all partners
-   */
-  @Get()
-  @ApiResponse({
-    status: 200,
-    description: 'Return list of partners',
-    type: ResponseSuccessPartnerListDto,
-  })
-  async findAll(@Req() req: AuthenticatedRequest, @Query() query: PartnerQueryDto) {
-    return this.partnerService.findAll(req.user, query);
-  }
-
-  /**
-   * Get a specific partner by id
-   */
-  @Get(':id')
-  @ApiResponse({
-    status: 200,
-    description: 'Return the specific partner',
-    type: ResponseSuccessPartnerSingleDto,
-  })
-  @ApiResourceErrors('Partner')
-  async findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
-    return this.partnerService.findById(id, req.user);
-  }
-
-  /**
-   * Update an existing partner
-   */
-  @Patch(':id')
-  @ApiResponse({
-    status: 200,
-    description: 'Partner successfully updated',
-    type: ResponseSuccessPartnerIdOnlyDto,
-  })
-  @ApiValidationErrors()
-  @ApiResourceErrors('Partner')
-  async update(
-    @Param('id') id: string,
-    @Req() req: AuthenticatedRequest,
-    @Body() dto: PartnerUpdatePayloadDto,
-  ) {
-    return this.partnerService.update(id, req.user, dto);
-  }
-
-  /**
-   * Delete a partner
+   * Soft Delete
    */
   @Delete(':id')
   @HttpCode(HttpStatus.NON_AUTHORITATIVE_INFORMATION)
@@ -124,21 +67,66 @@ export class PartnerController {
   })
   @ApiResourceErrors('Partner')
   async remove(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
-    await this.partnerService.delete(id, req.user);
+    await this.partnerService.delete({
+      id,
+      userId: req.user.id,
+    });
   }
 
-  /**
-   * Restore a deleted partner (Admin only)
-   */
   @ApiExcludeEndpoint()
   @Patch(':id/restore')
-  @ApiResponse({
-    status: 200,
-    description: 'Partner successfully restored',
-    type: ResponseSuccessPartnerIdOnlyDto,
-  })
-  @ApiResourceErrors('Partner')
   async restore(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
-    return this.partnerService.restore(id, req.user);
+    if (req.user.role !== 'admin') {
+      throw new ForbiddenException('Only admin can restore partners');
+    }
+    return this.partnerService.restore(id);
   }
+
+  // /**
+  //  * Create a new partner
+  //  */
+  // @Post()
+  // @ApiResponse({
+  //   status: 201,
+  //   description: 'Partner successfully created',
+  //   type: ResponseSuccessPartnerCreateDto,
+  // })
+  // @ApiValidationErrors()
+  // async create(@Req() req: AuthenticatedRequest, @Body() dto: PartnerCreateControllerDto) {
+  //   const result = await this.partnerService.create(req.user.id, dto);
+  //   return { id: result.id };
+  // }
+
+  // /**
+  //  * Get a specific partner by id
+  //  */
+  // @Get(':id')
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Return the specific partner',
+  //   type: ResponseSuccessPartnerViewDto,
+  // })
+  // @ApiResourceErrors('Partner')
+  // async findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
+  //   return this.partnerService.findById(id, req.user);
+  // }
+
+  // /**
+  //  * Update an existing partner
+  //  */
+  // @Patch(':id')
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Partner successfully updated',
+  //   type: ResponseSuccessPartnerUpdateDto,
+  // })
+  // @ApiValidationErrors()
+  // @ApiResourceErrors('Partner')
+  // async update(
+  //   @Param('id') id: string,
+  //   @Req() req: AuthenticatedRequest,
+  //   @Body() dto: PartnerUpdateControllerDto,
+  // ) {
+  //   return this.partnerService.update(id, req.user, dto);
+  // }
 }

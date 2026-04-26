@@ -1,18 +1,10 @@
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { incrementDocNumber } from '../_core/utils/increment-doc-number.util';
-import { PartnerCreatePayloadDto, PartnerQueryDto, PartnerUpdatePayloadDto } from './partner.dto';
+import { PartnerCreateInputSchema } from '@prisma/zod';
+import { incrementDocNumber } from '@src/_core/utils/increment-doc-number.util';
+import { PartnerQueryDTO } from './partner.dto';
 import { PartnerRepository } from './partner.repository';
-import {
-  InternalCreatePartnerSchema,
-  PartnerQuerySchema,
-  UpdatePartnerSchema,
-} from './partner.schema';
+import { PartnerListSchema, PartnerPresentationSchema, PartnerQuerySchema } from './partner.schema';
 
 export interface UserPayload {
   id: string;
@@ -24,81 +16,37 @@ export interface UserPayload {
 export class PartnerService {
   constructor(private readonly partnerRepository: PartnerRepository) {}
 
-  async getNextNumber(userId: string): Promise<{ number: string }> {
-    const latestNumber = await this.partnerRepository.findLatestNumber(userId);
-    const nextNumber = incrementDocNumber(latestNumber || '');
-    return { number: nextNumber };
-  }
+  async findAll(userId: string, query: PartnerQueryDTO) {
+    const parsedQuery = PartnerQuerySchema.parse(query);
 
-  async create(userId: string, dto: PartnerCreatePayloadDto) {
-    const payload = { ...dto, user_id: userId };
-    const validated = InternalCreatePartnerSchema.safeParse(payload);
-
-    if (!validated.success) {
-      const firstIssue = validated.error.issues[0];
-      throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
-    }
-
-    return this.partnerRepository.create(validated.data);
-  }
-
-  async findById(id: string, user: UserPayload, includeDeleted: boolean = false) {
-    const isAdmin = user.role === 'admin';
-    const partner = await this.partnerRepository.findById(id, isAdmin, includeDeleted);
-
-    if (!partner) {
-      throw new NotFoundException('Partner not found');
-    }
-
-    if (!isAdmin && partner.user_id !== user.id) {
-      throw new ForbiddenException('You do not have permission to access this partner');
-    }
-
-    return partner;
-  }
-
-  async findAll(user: UserPayload, query: PartnerQueryDto) {
-    const validated = PartnerQuerySchema.safeParse(query);
-    if (!validated.success) {
-      const firstIssue = validated.error.issues[0];
-      throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
-    }
-    const { page, limit, search, type, sortBy, sortOrder } = validated.data;
+    const { page, limit, search, types, sortBy, sortOrder } = parsedQuery;
     const skip = (page - 1) * limit;
 
-    const where: Prisma.PartnerWhereInput = {};
-    if (user.role !== 'admin') {
-      where.user_id = user.id;
-    }
-
-    if (type && type.length > 0) {
-      where.types = { hasEvery: type };
-    }
-
-    if (search) {
-      const orConditions: Prisma.PartnerWhereInput[] = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { company_email: { contains: search, mode: 'insensitive' } },
-      ];
-
-      where.OR = orConditions;
-    }
-
-    const orderBy: Prisma.PartnerOrderByWithRelationInput = {
-      [sortBy]: sortOrder,
+    const where: Prisma.PartnerWhereInput = {
+      user_id: userId,
     };
 
-    const isAdmin = user.role === 'admin';
+    if (search) {
+      where.OR = [
+        { name: { contains: search, mode: 'insensitive' } },
+        { company_email: { contains: search, mode: 'insensitive' } },
+        { number: { contains: search, mode: 'insensitive' } },
+      ];
+    }
+
+    if (types && types.length > 0) {
+      where.types = { hasSome: types };
+    }
+
     const [total, data] = await this.partnerRepository.findAll(
       where,
       skip,
       limit,
-      orderBy,
-      isAdmin,
+      sortBy ? { [sortBy]: sortOrder } : undefined,
     );
 
     return {
-      data,
+      data: PartnerListSchema.parse(data),
       meta: {
         total,
         page,
@@ -108,31 +56,47 @@ export class PartnerService {
     };
   }
 
-  async update(id: string, user: UserPayload, dto: PartnerUpdatePayloadDto) {
-    await this.findById(id, user);
+  async getNextNumber(userId: string): Promise<{ number: string }> {
+    const latestNumber = await this.partnerRepository.findLatestNumber(userId);
+    const nextNumber = incrementDocNumber(latestNumber || '');
 
-    const validated = UpdatePartnerSchema.safeParse(dto);
+    return { number: nextNumber };
+  }
+
+  async create(userId: string, dto: unknown) {
+    const validated = PartnerCreateInputSchema.safeParse(dto);
 
     if (!validated.success) {
       const firstIssue = validated.error.issues[0];
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
     }
 
-    return this.partnerRepository.update(id, validated.data as PartnerUpdatePayloadDto);
+    return this.partnerRepository.create({
+      ...validated.data,
+      user: {
+        connect: {
+          id: userId,
+        },
+      },
+    });
   }
 
-  async delete(id: string, user: UserPayload) {
-    await this.findById(id, user);
-    await this.partnerRepository.delete(id);
-  }
+  async findByIdAndUserId({ id, userId }: { id: string; userId: string }) {
+    const partner = await this.partnerRepository.findById(id);
 
-  async restore(id: string, user: UserPayload) {
-    if (user.role !== 'admin') {
-      throw new ForbiddenException('Only administrators can restore a partner');
+    if (!partner || partner.user_id !== userId) {
+      throw new NotFoundException('Partner not found');
     }
 
-    await this.findById(id, user, true);
+    return PartnerPresentationSchema.parse(partner);
+  }
 
-    return this.partnerRepository.restore(id);
+  async delete({ id, userId }: { id: string; userId: string }) {
+    await this.findByIdAndUserId({ id, userId });
+    return await this.partnerRepository.delete(id);
+  }
+
+  async restore(id: string) {
+    return await this.partnerRepository.restore(id);
   }
 }
