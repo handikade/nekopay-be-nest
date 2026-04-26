@@ -1,10 +1,16 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
-import { PartnerCreateInputSchema } from '@prisma/zod';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { PartnerType, Prisma } from '@prisma/client';
 import { incrementDocNumber } from '@src/_core/utils/increment-doc-number.util';
-import { PartnerQueryDTO } from './partner.dto';
+import { PartnerCreateDTO, PartnerQueryDTO, PartnerUpdateDTO } from './partner.dto';
 import { PartnerRepository } from './partner.repository';
-import { PartnerListSchema, PartnerPresentationSchema, PartnerQuerySchema } from './partner.schema';
+import {
+  PartnerCreateSchema,
+  PartnerIdSchema,
+  PartnerListSchema,
+  PartnerPresentationSchema,
+  PartnerQuerySchema,
+  PartnerUpdateSchema,
+} from './partner.schema';
 
 export interface UserPayload {
   id: string;
@@ -16,6 +22,104 @@ export interface UserPayload {
 export class PartnerService {
   constructor(private readonly partnerRepository: PartnerRepository) {}
 
+  async create(userId: string, dto: PartnerCreateDTO) {
+    const parsed = PartnerCreateSchema.parse(dto);
+    let { number } = parsed;
+    if (!number) {
+      const { number: nextNumber } = await this.getNextNumber(userId);
+      number = nextNumber;
+    }
+
+    const payload: Prisma.PartnerCreateInput = {
+      ...parsed,
+      number,
+      user: {
+        connect: { id: userId },
+      },
+      contacts: dto.contacts
+        ? {
+            create: dto.contacts,
+          }
+        : undefined,
+      partner_bank_accounts: dto.partner_bank_accounts
+        ? {
+            create: dto.partner_bank_accounts,
+          }
+        : undefined,
+    };
+
+    const result = await this.partnerRepository.create(payload);
+    return PartnerIdSchema.parse(result);
+  }
+
+  async update(id: string, userId: string, dto: PartnerUpdateDTO) {
+    await this.findByIdAndUserId({ id, userId });
+
+    const parsed = PartnerUpdateSchema.parse(dto);
+    const { contacts, partner_bank_accounts, ...partnerData } = parsed;
+
+    const payload: Prisma.PartnerUpdateInput = {
+      ...partnerData,
+    };
+
+    if (contacts) {
+      const idsToKeep = contacts.map((c) => c.id).filter((cid): cid is string => !!cid);
+      payload.contacts = {
+        deleteMany: {
+          id: { notIn: idsToKeep },
+        },
+        create: contacts
+          .filter((c) => !c.id)
+          .map((c) => ({
+            name: c.name,
+            email: c.email,
+            phone_number: c.phone_number,
+          })),
+        update: contacts
+          .filter((c) => !!c.id)
+          .map((c) => ({
+            where: { id: c.id as string },
+            data: {
+              name: c.name,
+              email: c.email,
+              phone_number: c.phone_number,
+            },
+          })),
+      };
+    }
+
+    if (partner_bank_accounts) {
+      const idsToKeep = partner_bank_accounts
+        .map((b) => b.id)
+        .filter((bid): bid is string => !!bid);
+      payload.partner_bank_accounts = {
+        deleteMany: {
+          id: { notIn: idsToKeep },
+        },
+        create: partner_bank_accounts
+          .filter((b) => !b.id)
+          .map((b) => ({
+            bank_id: b.bank_id,
+            account_number: b.account_number,
+            account_name: b.account_name,
+          })),
+        update: partner_bank_accounts
+          .filter((b) => !!b.id)
+          .map((b) => ({
+            where: { id: b.id as string },
+            data: {
+              bank_id: b.bank_id,
+              account_number: b.account_number,
+              account_name: b.account_name,
+            },
+          })),
+      };
+    }
+
+    const result = await this.partnerRepository.update(id, payload);
+    return PartnerIdSchema.parse(result);
+  }
+
   async findAll(userId: string, query: PartnerQueryDTO) {
     const parsedQuery = PartnerQuerySchema.parse(query);
 
@@ -24,6 +128,7 @@ export class PartnerService {
 
     const where: Prisma.PartnerWhereInput = {
       user_id: userId,
+      deleted_at: null,
     };
 
     if (search) {
@@ -34,8 +139,8 @@ export class PartnerService {
       ];
     }
 
-    if (types && types.length > 0) {
-      where.types = { hasSome: types };
+    if (Array.isArray(types) && types.length > 0) {
+      where.types = { hasSome: types as PartnerType[] };
     }
 
     const [total, data] = await this.partnerRepository.findAll(
@@ -61,24 +166,6 @@ export class PartnerService {
     const nextNumber = incrementDocNumber(latestNumber || '');
 
     return { number: nextNumber };
-  }
-
-  async create(userId: string, dto: unknown) {
-    const validated = PartnerCreateInputSchema.safeParse(dto);
-
-    if (!validated.success) {
-      const firstIssue = validated.error.issues[0];
-      throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
-    }
-
-    return this.partnerRepository.create({
-      ...validated.data,
-      user: {
-        connect: {
-          id: userId,
-        },
-      },
-    });
   }
 
   async findByIdAndUserId({ id, userId }: { id: string; userId: string }) {

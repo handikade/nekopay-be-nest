@@ -1,5 +1,13 @@
 import { PartnerType } from '@prisma/client';
 import { PartnerSchema, SortOrderSchema } from '@prisma/zod';
+import {
+  PartnerBankAccountCreateSchema,
+  PartnerBankAccountUpdateSchema,
+} from '@src/partner-bank-account/partner-bank-account.schema';
+import {
+  PartnerContactCreateSchema,
+  PartnerContactUpdateSchema,
+} from '@src/partner-contact/partner-contact.schema';
 import { z } from 'zod';
 
 export const PartnerQuerySchema = z.object({
@@ -12,7 +20,7 @@ export const PartnerQuerySchema = z.object({
         if (typeof val === 'string') return [val];
         return val;
       },
-      z.array(z.nativeEnum(PartnerType)),
+      z.array(z.enum(PartnerType)),
     )
     .optional()
     .describe('Filter by partner types'),
@@ -45,3 +53,20 @@ export const PartnerListSchema = z.array(
 export const PartnerIdSchema = PartnerSchema.pick({ id: true });
 
 export const PartnerNumberSchema = PartnerSchema.pick({ number: true });
+
+export const PartnerCreateSchema = PartnerSchema.omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+  deleted_at: true,
+  user_id: true,
+}).extend({
+  number: z.string().optional(),
+  contacts: z.array(PartnerContactCreateSchema).optional(),
+  partner_bank_accounts: z.array(PartnerBankAccountCreateSchema).optional(),
+});
+
+export const PartnerUpdateSchema = PartnerCreateSchema.partial().extend({
+  contacts: z.array(PartnerContactUpdateSchema).optional(),
+  partner_bank_accounts: z.array(PartnerBankAccountUpdateSchema).optional(),
+});

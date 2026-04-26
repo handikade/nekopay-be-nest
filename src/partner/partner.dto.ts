@@ -1,4 +1,3 @@
-import { PartnerCreateInputSchema, PartnerUpdateInputSchema } from '@prisma/zod';
 import { createZodDto } from 'nestjs-zod';
 import {
   makeCreatedResponseSchema,
@@ -6,15 +5,17 @@ import {
   makeSuccessResponseSchema,
 } from '../_core/schemas/response-success.schema';
 import {
+  PartnerCreateSchema,
   PartnerIdSchema,
   PartnerListSchema,
   PartnerNumberSchema,
   PartnerPresentationSchema,
   PartnerQuerySchema,
+  PartnerUpdateSchema,
 } from './partner.schema';
 
-export class PartnerCreateInputDTO extends createZodDto(PartnerCreateInputSchema) {}
-export class PartnerUpdateInputDTO extends createZodDto(PartnerUpdateInputSchema) {}
+export class PartnerCreateDTO extends createZodDto(PartnerCreateSchema) {}
+export class PartnerUpdateDTO extends createZodDto(PartnerUpdateSchema) {}
 export class PartnerQueryDTO extends createZodDto(PartnerQuerySchema) {}
 export class PartnerPresentationDTO extends createZodDto(PartnerPresentationSchema) {}
 export class PartnerListDTO extends createZodDto(PartnerListSchema) {}

@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Delete,
   ForbiddenException,
@@ -7,18 +8,27 @@ import {
   HttpStatus,
   Param,
   Patch,
+  Post,
   Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs/swagger';
-import { ApiAuthErrors, ApiResourceErrors } from '../_core/decorators/swagger-response.decorator';
+import {
+  ApiAuthErrors,
+  ApiResourceErrors,
+  ApiValidationErrors,
+} from '../_core/decorators/swagger-response.decorator';
 import { type AuthenticatedRequest } from '../_core/types/response-authenticated.type';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import {
+  PartnerCreateDTO,
   PartnerQueryDTO,
+  PartnerUpdateDTO,
+  ResponseSuccessPartnerCreateDto,
   ResponseSuccessPartnerListDto,
   ResponseSuccessPartnerNextNumberDto,
+  ResponseSuccessPartnerUpdateDto,
 } from './partner.dto';
 import { PartnerService } from './partner.service';
 
@@ -29,6 +39,39 @@ import { PartnerService } from './partner.service';
 @Controller('partners')
 export class PartnerController {
   constructor(private readonly partnerService: PartnerService) {}
+
+  /**
+   * Create Partner
+   */
+  @Post()
+  @ApiResponse({
+    status: 201,
+    description: 'Partner successfully created',
+    type: ResponseSuccessPartnerCreateDto,
+  })
+  @ApiValidationErrors()
+  async create(@Req() req: AuthenticatedRequest, @Body() dto: PartnerCreateDTO) {
+    return await this.partnerService.create(req.user.id, dto);
+  }
+
+  /**
+   * Update Partner
+   */
+  @Patch(':id')
+  @ApiResponse({
+    status: 200,
+    description: 'Partner successfully updated',
+    type: ResponseSuccessPartnerUpdateDto,
+  })
+  @ApiValidationErrors()
+  @ApiResourceErrors('Partner')
+  async update(
+    @Param('id') id: string,
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: PartnerUpdateDTO,
+  ) {
+    return await this.partnerService.update(id, req.user.id, dto);
+  }
 
   /**
    * Find All
@@ -81,52 +124,4 @@ export class PartnerController {
     }
     return this.partnerService.restore(id);
   }
-
-  // /**
-  //  * Create a new partner
-  //  */
-  // @Post()
-  // @ApiResponse({
-  //   status: 201,
-  //   description: 'Partner successfully created',
-  //   type: ResponseSuccessPartnerCreateDto,
-  // })
-  // @ApiValidationErrors()
-  // async create(@Req() req: AuthenticatedRequest, @Body() dto: PartnerCreateControllerDto) {
-  //   const result = await this.partnerService.create(req.user.id, dto);
-  //   return { id: result.id };
-  // }
-
-  // /**
-  //  * Get a specific partner by id
-  //  */
-  // @Get(':id')
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Return the specific partner',
-  //   type: ResponseSuccessPartnerViewDto,
-  // })
-  // @ApiResourceErrors('Partner')
-  // async findOne(@Param('id') id: string, @Req() req: AuthenticatedRequest) {
-  //   return this.partnerService.findById(id, req.user);
-  // }
-
-  // /**
-  //  * Update an existing partner
-  //  */
-  // @Patch(':id')
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Partner successfully updated',
-  //   type: ResponseSuccessPartnerUpdateDto,
-  // })
-  // @ApiValidationErrors()
-  // @ApiResourceErrors('Partner')
-  // async update(
-  //   @Param('id') id: string,
-  //   @Req() req: AuthenticatedRequest,
-  //   @Body() dto: PartnerUpdateControllerDto,
-  // ) {
-  //   return this.partnerService.update(id, req.user, dto);
-  // }
 }
