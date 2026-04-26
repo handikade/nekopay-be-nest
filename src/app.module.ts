@@ -9,6 +9,7 @@ import { PartnerModule } from './partner/partner.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RegionModule } from './region/region.module';
 import { TaxModule } from './tax/tax.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TaxModule } from './tax/tax.module';
     RegionModule,
     InvoiceModule,
     TaxModule,
+    UserModule,
   ],
   controllers: [AppController],
   providers: [AppService],
