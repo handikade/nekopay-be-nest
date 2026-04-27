@@ -25,6 +25,9 @@ import { BankService } from './bank.service';
 export class BankController {
   constructor(private readonly bankService: BankService) {}
 
+  /**
+   * Find All Banks
+   */
   @ApiResponse({
     status: 200,
     description: 'Return the bank list',

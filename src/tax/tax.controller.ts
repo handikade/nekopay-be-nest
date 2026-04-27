@@ -14,6 +14,9 @@ import { TaxService } from './tax.service';
 export class TaxController {
   constructor(private readonly taxService: TaxService) {}
 
+  /**
+   * Find All Taxes
+   */
   @Get()
   @ApiResponse({
     status: 200,
@@ -24,6 +27,9 @@ export class TaxController {
     return await this.taxService.findAll(query);
   }
 
+  /**
+   * Find Tax by ID
+   */
   @Get(':id')
   @ApiResponse({
     status: 200,
