@@ -20,19 +20,61 @@ export const makeErrorResponseSchema = (options: {
   });
 };
 
+export class Error400DTO extends createZodDto(
+  makeErrorResponseSchema({
+    statusCode: 400,
+    message: 'Bad Request',
+    error: 'Bad Request',
+  }),
+) {}
+
+export class Error401DTO extends createZodDto(
+  makeErrorResponseSchema({
+    statusCode: 401,
+    message: 'Unauthorized',
+    error: 'Unauthorized',
+  }),
+) {}
+
+export class Error403DTO extends createZodDto(
+  makeErrorResponseSchema({
+    statusCode: 403,
+    message: 'Forbidden',
+    error: 'Forbidden',
+  }),
+) {}
+
+export class Error404DTO extends createZodDto(
+  makeErrorResponseSchema({
+    statusCode: 404,
+    message: 'Not Found',
+    error: 'Not Found',
+  }),
+) {}
+
+export class Error409DTO extends createZodDto(
+  makeErrorResponseSchema({
+    statusCode: 409,
+    message: 'Conflict',
+    error: 'Conflict',
+  }),
+) {}
+
+export class Error500DTO extends createZodDto(
+  makeErrorResponseSchema({
+    statusCode: 500,
+    message: 'Internal Server Error',
+    error: 'Internal Server Error',
+  }),
+) {}
+
 // #region DECORATORS
 export function ApiErrors400() {
   return applyDecorators(
     ApiResponse({
       status: 400,
       description: 'Bad Request / Validation Error',
-      type: createZodDto(
-        makeErrorResponseSchema({
-          statusCode: 400,
-          message: 'Bad Request',
-          error: 'Bad Request',
-        }),
-      ),
+      type: Error400DTO,
     }),
   );
 }
@@ -42,13 +84,7 @@ export function ApiErrors401() {
     ApiResponse({
       status: 401,
       description: 'Unauthorized',
-      type: createZodDto(
-        makeErrorResponseSchema({
-          statusCode: 401,
-          message: 'Unauthorized',
-          error: 'Unauthorized',
-        }),
-      ),
+      type: Error401DTO,
     }),
   );
 }
@@ -58,13 +94,7 @@ export function ApiErrors403() {
     ApiResponse({
       status: 403,
       description: 'Forbidden',
-      type: createZodDto(
-        makeErrorResponseSchema({
-          statusCode: 403,
-          message: 'Forbidden',
-          error: 'Forbidden',
-        }),
-      ),
+      type: Error403DTO,
     }),
   );
 }
@@ -74,13 +104,7 @@ export function ApiErrors404(resourceName = 'Resource') {
     ApiResponse({
       status: 404,
       description: `${resourceName} not found`,
-      type: createZodDto(
-        makeErrorResponseSchema({
-          statusCode: 404,
-          message: 'Not Found',
-          error: 'Not Found',
-        }),
-      ),
+      type: Error404DTO,
     }),
   );
 }
@@ -90,13 +114,7 @@ export function ApiErrors409() {
     ApiResponse({
       status: 409,
       description: 'Conflict',
-      type: createZodDto(
-        makeErrorResponseSchema({
-          statusCode: 409,
-          message: 'Conflict',
-          error: 'Conflict',
-        }),
-      ),
+      type: Error409DTO,
     }),
   );
 }
@@ -106,13 +124,7 @@ export function ApiErrors500() {
     ApiResponse({
       status: 500,
       description: 'Internal Server Error',
-      type: createZodDto(
-        makeErrorResponseSchema({
-          statusCode: 500,
-          message: 'Internal Server Error',
-          error: 'Internal Server Error',
-        }),
-      ),
+      type: Error500DTO,
     }),
   );
 }
