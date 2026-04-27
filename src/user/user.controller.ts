@@ -1,4 +1,10 @@
-import { ApiErrors401, ApiErrors403, ApiErrors404 } from '@libs/swagger';
+import {
+  ApiErrors400,
+  ApiErrors401,
+  ApiErrors403,
+  ApiErrors404,
+  ApiErrors500,
+} from '@libs/swagger';
 import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 import type { AuthenticatedRequest } from '@src/_core/types/authenticated-request.type';
@@ -9,19 +15,21 @@ import { UserService } from './user.service';
 @ApiTags('users')
 @ApiBearerAuth()
 @UseGuards(JwtAuthGuard)
+@ApiErrors401()
+@ApiErrors500()
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
   /**
-   * Get user detail
+   * Get User by ID
    */
   @ApiResponse({
     status: 200,
     description: 'Return the user detail',
     type: UserResponseDTO,
   })
-  @ApiErrors401()
+  @ApiErrors400()
   @ApiErrors403()
   @ApiErrors404('User')
   @Get(':id')
