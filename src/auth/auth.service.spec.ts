@@ -3,10 +3,9 @@ import { JwtService } from '@nestjs/jwt';
 import { Test, TestingModule } from '@nestjs/testing';
 import { User } from '@prisma/client';
 import * as argon2 from 'argon2';
-import { AuthRepository } from './auth.repository';
+import { UserRepository } from '../user/user.repository';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
-import { RegisterDto } from './dto/register.dto';
 
 jest.mock('argon2');
 
@@ -24,9 +23,8 @@ describe('AuthService', () => {
     role: 'user',
   };
 
-  const mockAuthRepository = {
+  const mockUserRepository = {
     findByEmailOrUsername: jest.fn(),
-    createUser: jest.fn(),
   };
 
   const mockJwtService = {
@@ -39,8 +37,8 @@ describe('AuthService', () => {
       providers: [
         AuthService,
         {
-          provide: AuthRepository,
-          useValue: mockAuthRepository,
+          provide: UserRepository,
+          useValue: mockUserRepository,
         },
         {
           provide: JwtService,
@@ -60,43 +58,6 @@ describe('AuthService', () => {
     expect(service).toBeDefined();
   });
 
-  describe('register', () => {
-    const registerDto: RegisterDto = {
-      email: 'newuser@example.com',
-      username: 'newuser',
-      password: 'password123',
-    };
-
-    it('should successfully register a new user', async () => {
-      mockAuthRepository.findByEmailOrUsername.mockResolvedValue(null);
-      (argon2.hash as jest.Mock).mockResolvedValue('hashedpassword');
-      mockAuthRepository.createUser.mockResolvedValue({ ...mockUser, ...registerDto });
-
-      const result = await service.register(registerDto);
-
-      expect(mockAuthRepository.findByEmailOrUsername).toHaveBeenCalledWith(registerDto.email);
-      expect(argon2.hash).toHaveBeenCalledWith(registerDto.password);
-      expect(mockAuthRepository.createUser).toHaveBeenCalledWith({
-        ...registerDto,
-        password: 'hashedpassword',
-      });
-      expect(result).toEqual({ message: 'User registered successfully' });
-    });
-
-    it('should throw ConflictException if user already exists', async () => {
-      mockAuthRepository.findByEmailOrUsername.mockResolvedValue(mockUser);
-
-      await expect(service.register(registerDto)).rejects.toThrow(ConflictException);
-      await expect(service.register(registerDto)).rejects.toThrow(
-        'Email or username already exists',
-      );
-
-      expect(mockAuthRepository.findByEmailOrUsername).toHaveBeenCalledWith(registerDto.email);
-      expect(argon2.hash).not.toHaveBeenCalled();
-      expect(mockAuthRepository.createUser).not.toHaveBeenCalled();
-    });
-  });
-
   describe('login', () => {
     const loginDto: LoginDto = {
       identifier: 'test@example.com',
@@ -104,7 +65,7 @@ describe('AuthService', () => {
     };
 
     it('should successfully login and return tokens', async () => {
-      mockAuthRepository.findByEmailOrUsername.mockResolvedValue(mockUser);
+      mockUserRepository.findByEmailOrUsername.mockResolvedValue(mockUser);
       (argon2.verify as jest.Mock).mockResolvedValue(true);
 
       mockJwtService.signAsync
@@ -113,7 +74,7 @@ describe('AuthService', () => {
 
       const result = await service.login(loginDto);
 
-      expect(mockAuthRepository.findByEmailOrUsername).toHaveBeenCalledWith(loginDto.identifier);
+      expect(mockUserRepository.findByEmailOrUsername).toHaveBeenCalledWith(loginDto.identifier);
       expect(argon2.verify).toHaveBeenCalledWith(mockUser.password, loginDto.password);
 
       expect(mockJwtService.signAsync).toHaveBeenNthCalledWith(1, {
@@ -133,24 +94,24 @@ describe('AuthService', () => {
     });
 
     it('should throw ConflictException if user is not found', async () => {
-      mockAuthRepository.findByEmailOrUsername.mockResolvedValue(null);
+      mockUserRepository.findByEmailOrUsername.mockResolvedValue(null);
 
       await expect(service.login(loginDto)).rejects.toThrow(ConflictException);
       await expect(service.login(loginDto)).rejects.toThrow('Invalid credentials');
 
-      expect(mockAuthRepository.findByEmailOrUsername).toHaveBeenCalledWith(loginDto.identifier);
+      expect(mockUserRepository.findByEmailOrUsername).toHaveBeenCalledWith(loginDto.identifier);
       expect(argon2.verify).not.toHaveBeenCalled();
       expect(mockJwtService.signAsync).not.toHaveBeenCalled();
     });
 
     it('should throw ConflictException if password is invalid', async () => {
-      mockAuthRepository.findByEmailOrUsername.mockResolvedValue(mockUser);
+      mockUserRepository.findByEmailOrUsername.mockResolvedValue(mockUser);
       (argon2.verify as jest.Mock).mockResolvedValue(false);
 
       await expect(service.login(loginDto)).rejects.toThrow(ConflictException);
       await expect(service.login(loginDto)).rejects.toThrow('Invalid credentials');
 
-      expect(mockAuthRepository.findByEmailOrUsername).toHaveBeenCalledWith(loginDto.identifier);
+      expect(mockUserRepository.findByEmailOrUsername).toHaveBeenCalledWith(loginDto.identifier);
       expect(argon2.verify).toHaveBeenCalledWith(mockUser.password, loginDto.password);
       expect(mockJwtService.signAsync).not.toHaveBeenCalled();
     });

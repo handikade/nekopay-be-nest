@@ -1,37 +1,16 @@
 import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { User } from '@prisma/client';
 import * as argon2 from 'argon2';
-import { AuthRepository } from './auth.repository';
+import { UserRepository } from '../user/user.repository';
 import { LoginDto, LoginSchema } from './dto/login.dto';
-import { RegisterDto, RegisterSchema } from './dto/register.dto';
 
 @Injectable()
 export class AuthService {
   constructor(
-    private readonly authRepository: AuthRepository,
+    private readonly userRepository: UserRepository,
     private readonly jwtService: JwtService,
   ) {}
-
-  async register(dto: RegisterDto) {
-    const validated = RegisterSchema.safeParse(dto);
-    if (!validated.success) {
-      const firstIssue = validated.error.issues[0];
-      throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
-    }
-
-    const existingUser = await this.authRepository.findByEmailOrUsername(dto.email);
-    if (existingUser) {
-      throw new ConflictException('Email or username already exists');
-    }
-
-    const hashedPassword = await argon2.hash(dto.password);
-    await this.authRepository.createUser({
-      ...dto,
-      password: hashedPassword,
-    });
-
-    return { message: 'User registered successfully' };
-  }
 
   async login(dto: LoginDto) {
     const validated = LoginSchema.safeParse(dto);
@@ -40,12 +19,22 @@ export class AuthService {
       throw new BadRequestException(`${firstIssue.path.join('.')}: ${firstIssue.message}`);
     }
 
-    const user = await this.authRepository.findByEmailOrUsername(dto.identifier);
-    if (!user || !(await argon2.verify(user.password, dto.password))) {
+    const { identifier, password } = dto;
+    const user: User | null = await this.userRepository.findByEmailOrUsername(identifier);
+
+    if (!user) {
       throw new ConflictException('Invalid credentials');
     }
 
-    const payload = { sub: user.id, username: user.username };
+    const isPasswordValid = await argon2.verify(user.password, password);
+    if (!isPasswordValid) {
+      throw new ConflictException('Invalid credentials');
+    }
+
+    const payload: { sub: string; username: string } = {
+      sub: user.id,
+      username: user.username,
+    };
     const accessToken = await this.jwtService.signAsync(payload);
     const refreshToken = await this.jwtService.signAsync(payload, {
       expiresIn: '7d',

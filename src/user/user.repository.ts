@@ -37,6 +37,20 @@ export class UserRepository {
     });
   }
 
+  async findByPhoneNumber(phone_number: string): Promise<User | null> {
+    return this.prisma.user.findUnique({
+      where: { phone_number },
+    });
+  }
+
+  async findByEmailOrUsername(identifier: string): Promise<User | null> {
+    return this.prisma.user.findFirst({
+      where: {
+        OR: [{ email: identifier }, { username: identifier }],
+      },
+    });
+  }
+
   async findAll(
     whereClause: Prisma.UserWhereInput,
     skip?: number,

@@ -1,3 +1,4 @@
+import { ConflictException } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import { User, UserRole } from '@prisma/client';
 import { UserRepository } from './user.repository';
@@ -20,6 +21,11 @@ describe('UserService', () => {
   const mockUserRepository = {
     findAll: jest.fn(),
     findById: jest.fn(),
+    create: jest.fn(),
+    findByEmail: jest.fn(),
+    findByUsername: jest.fn(),
+    findByPhoneNumber: jest.fn(),
+    findByEmailOrUsername: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -42,6 +48,49 @@ describe('UserService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('create', () => {
+    const createUserDto = {
+      username: 'newuser',
+      email: 'new@example.com',
+      password: 'password123',
+      phone_number: '0987654321',
+      role: UserRole.user,
+    };
+
+    it('should successfully create a new user', async () => {
+      mockUserRepository.findByEmail.mockResolvedValue(null);
+      mockUserRepository.findByUsername.mockResolvedValue(null);
+      mockUserRepository.findByPhoneNumber.mockResolvedValue(null);
+      mockUserRepository.create.mockResolvedValue({
+        ...mockUser,
+        username: createUserDto.username,
+        email: createUserDto.email,
+      });
+
+      const result = await service.create(createUserDto);
+
+      expect(mockUserRepository.findByEmail).toHaveBeenCalledWith(createUserDto.email);
+      expect(mockUserRepository.findByUsername).toHaveBeenCalledWith(createUserDto.username);
+      expect(mockUserRepository.findByPhoneNumber).toHaveBeenCalledWith(createUserDto.phone_number);
+      expect(mockUserRepository.create).toHaveBeenCalled();
+      expect(result).not.toHaveProperty('password');
+      expect(result.username).toBe(createUserDto.username);
+    });
+
+    it('should throw ConflictException if email already exists', async () => {
+      mockUserRepository.findByEmail.mockResolvedValue(mockUser);
+
+      await expect(service.create(createUserDto)).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw ConflictException if username already exists', async () => {
+      mockUserRepository.findByEmail.mockResolvedValue(null);
+      mockUserRepository.findByUsername.mockResolvedValue(mockUser);
+
+      await expect(service.create(createUserDto)).rejects.toThrow(ConflictException);
+    });
   });
 
   describe('findAll', () => {

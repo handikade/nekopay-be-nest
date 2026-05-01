@@ -10,12 +10,13 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiExcludeEndpoint, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { InternalServerErrorResponseDto } from '../_core/types/error-response.type';
+import { UserResponseDTO } from '../user/user.dto';
+import { UserService } from '../user/user.service';
 import { AuthService } from './auth.service';
 import {
   LoginConflictResponseDto,
   LoginSuccessResponseDto,
   RegisterConflictResponseDto,
-  RegisterSuccessResponseDto,
 } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -31,7 +32,10 @@ interface AuthenticatedRequest extends Request {
 @ApiTags('auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly userService: UserService,
+  ) {}
 
   /**
    * Register a new user account
@@ -40,7 +44,7 @@ export class AuthController {
   @ApiResponse({
     status: 201,
     description: 'User successfully registered',
-    type: RegisterSuccessResponseDto,
+    type: UserResponseDTO,
   })
   @ApiResponse({
     status: 500,
@@ -64,7 +68,7 @@ export class AuthController {
     },
   })
   async register(@Body() dto: RegisterDto) {
-    return this.authService.register(dto);
+    return this.userService.create(dto);
   }
 
   /**

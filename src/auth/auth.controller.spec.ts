@@ -1,5 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { Response } from 'express';
+import { UserService } from '../user/user.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
@@ -9,8 +10,11 @@ describe('AuthController', () => {
   let controller: AuthController;
 
   const mockAuthService = {
-    register: jest.fn(),
     login: jest.fn(),
+  };
+
+  const mockUserService = {
+    create: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -20,6 +24,10 @@ describe('AuthController', () => {
         {
           provide: AuthService,
           useValue: mockAuthService,
+        },
+        {
+          provide: UserService,
+          useValue: mockUserService,
         },
       ],
     }).compile();
@@ -43,13 +51,18 @@ describe('AuthController', () => {
         password: 'password123',
       };
 
-      const expectedResult = { message: 'User registered successfully' };
-      mockAuthService.register.mockResolvedValue(expectedResult);
+      const expectedResult = {
+        id: 'user-id',
+        email: 'test@example.com',
+        username: 'testuser',
+        role: 'user',
+      };
+      mockUserService.create.mockResolvedValue(expectedResult);
 
       const result = await controller.register(registerDto);
 
-      expect(mockAuthService.register).toHaveBeenCalledTimes(1);
-      expect(mockAuthService.register).toHaveBeenCalledWith(registerDto);
+      expect(mockUserService.create).toHaveBeenCalledTimes(1);
+      expect(mockUserService.create).toHaveBeenCalledWith(registerDto);
       expect(result).toEqual(expectedResult);
     });
   });

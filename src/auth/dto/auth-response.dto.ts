@@ -6,25 +6,11 @@ import {
 import { makeCreatedResponseSchema, makeResponseDto } from '../../_core/types/response.type';
 
 /**
- * Schema for register success response.
- */
-export const RegisterSuccessSchema = z.object({
-  message: z.string().describe('Success message'),
-});
-
-/**
  * Schema for login success response.
  */
 export const LoginSuccessSchema = z.object({
   accessToken: z.string().describe('JWT access token'),
 });
-
-/**
- * DTO for successful user registration.
- */
-export class RegisterSuccessResponseDto extends makeResponseDto(
-  makeCreatedResponseSchema(RegisterSuccessSchema),
-) {}
 
 /**
  * DTO for successful user login.

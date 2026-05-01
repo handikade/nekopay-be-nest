@@ -6,6 +6,12 @@ export const UserCreateSchema = UserSchema.omit({
   password: true,
   created_at: true,
   updated_at: true,
+  role: true,
+  phone_number: true,
+}).extend({
+  password: z.string().min(8).describe('User password'),
+  role: z.enum(['admin', 'user']).optional().describe('User role'),
+  phone_number: z.string().optional().describe('User phone number'),
 });
 
 export const UserQueryParamsSchema = z.object({

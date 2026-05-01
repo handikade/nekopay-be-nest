@@ -25,8 +25,10 @@ describe('AuthController (e2e)', () => {
       .send(testUser)
       .expect(201)
       .expect((res: request.Response) => {
-        const body = res.body as AppResponse<{ message: string }>;
-        expect(body.data.message).toBe('User registered successfully');
+        const body = res.body as AppResponse<{ username: string; email: string }>;
+        expect(body.data.username).toBe(testUser.username);
+        expect(body.data.email).toBe(testUser.email);
+        expect(body.data).not.toHaveProperty('password');
       });
   });
 
